@@ -1,0 +1,8 @@
+{
+  "name": "D.T. Workstation",
+  "description": "Eine zentrale Plattform, um Ideen und Tools zu strukturieren, zu bewerten und in reale, reaktivierbare Produkte zu verwandeln.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

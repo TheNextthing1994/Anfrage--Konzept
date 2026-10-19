@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Syne', sans-serif;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #0B0F17;
+    color: #F1F5F9;
+    letter-spacing: 0.01em;
+  }
+
+  h1, h2, .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono, code, pre, .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Smooth custom scrollbar for dark workstation surfaces */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #070B12;
+}
+::-webkit-scrollbar-thumb {
+  background: #162438;
+  border-radius: 9999px;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1E3A5F;
+  border-color: rgba(6, 182, 212, 0.35);
+}
+
+/* Event-Storming Canvas: Glowing Marquee / Lasso Selection Box in Neon Cyan & Ice Blue */
+.react-flow__selection {
+  background: rgba(6, 182, 212, 0.14) !important;
+  border: 2px dashed #22d3ee !important;
+  box-shadow: 0 0 25px rgba(6, 182, 212, 0.5), inset 0 0 20px rgba(6, 182, 212, 0.25) !important;
+  border-radius: 12px !important;
+  pointer-events: none !important;
+}
+
+.react-flow__nodesselection-rect {
+  background: rgba(6, 182, 212, 0.12) !important;
+  border: 1.5px solid #06b6d4 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.4) !important;
+}
+
+/* Cine-Glass and Neon Cyan Utility Accents */
+.glass-capsule {
+  background: rgba(10, 17, 28, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 36px rgba(0, 0, 0, 0.55),
+    0 0 20px rgba(6, 182, 212, 0.08);
+}
+
+.glass-capsule-hover:hover {
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 14px 40px rgba(0, 0, 0, 0.6),
+    0 0 25px rgba(6, 182, 212, 0.18);
+}
+
+.glow-cyan-border {
+  border-color: rgba(34, 211, 238, 0.5);
+  box-shadow: 0 0 16px rgba(6, 182, 212, 0.25);
+}
+
+.glow-cyan-node {
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 10px 30px rgba(0, 0, 0, 0.7),
+    0 0 24px rgba(6, 182, 212, 0.22);
+}
+
+.glow-pulse-cyan {
+  animation: pulse-cyan 3s infinite ease-in-out;
+}
+
+@keyframes pulse-cyan {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(6, 182, 212, 0.55);
+  }
+}
+
