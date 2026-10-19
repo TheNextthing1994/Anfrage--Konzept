@@ -41,7 +41,7 @@ export function generateEventStormingGraph(
       // Branch B: Unsicher erkannt / Handschrift unklar
       'NODE-06': { x: 1400, y: 350 },  // Exception: In Büro-Prüffach leiten
       'NODE-07': { x: 1740, y: 350 },  // Actor: Büro prüft & weist zu
-      'NODE-11': { x: 1740, y: 530 },  // Question: WhatsApp Rückfrage?
+      'NODE-11': { x: 1740, y: 680 },  // Keep the question below the readable 244px cards.
 
       // Convergence & Fehlteile-Radar
       'NODE-08': { x: 2080, y: 200 },  // Policy: Fehlteile-Radar (Lieferschein vorhanden?)
@@ -135,7 +135,7 @@ export function generateEventStormingGraph(
       // Branch B (Bottom: Unsicher erkannt)
       'NODE-06': { x: 1400, y: 350 },   // Exception: In Prüffach leiten
       'NODE-07': { x: 1740, y: 350 },   // Actor: Büromitarbeiter prüft & ordnet zu
-      'NODE-10': { x: 1740, y: 530 },   // Policy/Question: WhatsApp Rückfrage?
+      'NODE-10': { x: 1740, y: 680 },   // Keep the question clear of the review card above.
 
       // Convergence
       'NODE-08': { x: 2080, y: 200 },   // Read Model: Dokument gespeichert
@@ -222,7 +222,7 @@ export function generateEventStormingGraph(
         y = 350;
         x = 40 + mainCol * 340;
       } else if (node.status === 'QUESTION') {
-        y = 520;
+        y = 680;
         x = 40 + Math.max(0, mainCol - 1) * 340;
       } else {
         y = 200;
@@ -238,7 +238,7 @@ export function generateEventStormingGraph(
       } else {
         x = 240;
       }
-      y = 40 + mainCol * 220;
+      y = 40 + mainCol * 280;
       mainCol++;
     }
 
