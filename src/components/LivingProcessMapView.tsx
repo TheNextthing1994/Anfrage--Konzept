@@ -269,11 +269,11 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="dt-process-workspace space-y-4">
       {/* ============================================================== */}
       {/* TOP HEADER: VERSTEHEN PHASEN-LEISTE & VERSTÄNDNIS-SCORE */}
       {/* ============================================================== */}
-      <div className="bg-[#0D121C] border border-slate-800 rounded-xl p-4 shadow-xl shadow-black/40">
+      <div className="dt-process-header p-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <span className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center font-bold text-sm font-mono shadow-md shadow-purple-950">
@@ -336,7 +336,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
         {/* METRICS ROW: Understanding Score in Frosted Glass Capsule */}
         <div className="pt-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
           {/* Understanding Score Bar */}
-          <div className="md:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-capsule rounded-full p-2.5 px-4 border border-cyan-500/25 shadow-[0_8px_24px_rgba(0,0,0,0.5),0_0_15px_rgba(6,182,212,0.06)]">
+          <div className="dt-process-progress md:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-capsule p-2.5 px-4">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
                 <Sparkles className="w-4 h-4 text-cyan-400" />
@@ -385,13 +385,13 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
       {/* 3-COLUMN WORKSPACE: 25% LEFT | 50% CENTER | 25% RIGHT */}
       {/* The Center Canvas is the dominant element and fills height */}
       {/* ============================================================== */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch h-[calc(100vh-230px)] min-h-[660px]">
+      <div className="dt-process-layout grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
         {/* ------------------------------------------------------------ */}
         {/* COLUMN 1 (Left - 25% / xl:col-span-3): Original Kundentext */}
         {/* ------------------------------------------------------------ */}
-        <div className="xl:col-span-3 h-full flex flex-col bg-[#070B13]/90 backdrop-blur-xl border border-cyan-500/20 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="dt-context-panel xl:col-span-3 h-full flex flex-col">
           {/* Column Header */}
-          <div className="p-3.5 border-b border-cyan-500/15 flex items-center justify-between bg-[#070B13]">
+          <div className="dt-context-heading p-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-cyan-400" />
               <h2 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
@@ -432,7 +432,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 </span>
               </div>
 
-              <div className="p-3 bg-[#05080F]/90 border border-cyan-500/15 rounded-xl text-slate-300 leading-relaxed space-y-2.5 font-mono text-[11px] shadow-inner">
+              <div className="dt-source-copy p-3 rounded-xl text-slate-300 space-y-2.5">
                 {/* Check if raw request matches selected node quote */}
                 <div
                   className={`p-2.5 rounded-lg border transition-all ${
@@ -565,8 +565,9 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
         {/* ------------------------------------------------------------ */}
         {/* COLUMN 2 (Center - ~50% / xl:col-span-6): Dominanter Graph */}
         {/* ------------------------------------------------------------ */}
-        <div className="xl:col-span-6 h-full flex flex-col">
+        <div className="xl:col-span-6 h-full min-w-0 flex flex-col">
           <EventStormingCanvas
+            key={request.id}
             nodes={nodes}
             selectedNodeId={selectedNodeId}
             filterStatus={filterStatus}
@@ -582,9 +583,9 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
         {/* ------------------------------------------------------------ */}
         {/* COLUMN 3 (Right - 25% / xl:col-span-3): Interaktiver Inspektor */}
         {/* ------------------------------------------------------------ */}
-        <div className="xl:col-span-3 h-full flex flex-col bg-[#070B13]/90 backdrop-blur-xl border border-cyan-500/20 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="dt-context-panel xl:col-span-3 h-full flex flex-col">
           {/* Column Header */}
-          <div className="p-3.5 border-b border-cyan-500/15 flex items-center justify-between bg-[#070B13]">
+          <div className="dt-context-heading p-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-bold uppercase text-cyan-300 tracking-[0.16em]">
                 Knoten-Inspektor
