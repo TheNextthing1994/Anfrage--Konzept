@@ -1,0 +1,43 @@
+{
+  "passed": 22,
+  "checks": [
+    "Readable initial viewport and no horizontal page overflow",
+    "Node selection updates the inspector",
+    "Dragging survives filter and selection changes",
+    "100% reading view and whole-graph overview",
+    "Lasso drag zooms into the selected region",
+    "Process-center button selects a rule and updates the inspector",
+    "Inspector status changes update the graph",
+    "Adding a node still works",
+    "Customer switching resets the appropriate canvas and preserves readable start",
+    "Continue to UX Preview still works",
+    "Responsive viewport 1440x900",
+    "Responsive viewport 390x844",
+    "Review progress reflects confirmed nodes and the review action opens an unresolved step",
+    "Legend originates at its trigger and supports Escape, keyboard return and outside dismissal",
+    "Press feedback appears before release and dragging away cancels the button activation",
+    "A manual pan interrupts the camera transition without a later snap-back",
+    "Changing the OS motion preference preserves the manually chosen canvas position",
+    "Live reduced-motion changes disable camera animation; normal motion resumes without reload",
+    "Higher-contrast preference supplies solid surfaces and defined borders",
+    "Reduced-transparency preference removes blur and uses an opaque material",
+    "Local process derivation provides completion feedback without a simulated loading state",
+    "Touch controls meet 44px sizing and the mobile legend stays within the viewport"
+  ],
+  "runtimeErrors": [],
+  "browser": "153.0.8010.0",
+  "viewports": [
+    "1920x1080",
+    "1440x900",
+    "390x844"
+  ],
+  "timestamp": "2026-10-20T08:07:30.359Z",
+  "project_base": "cff4e02987da4735ee658f3c9a2a495da8bae3e1",
+  "skill_commit": "2d228630ba1446365f614a108cb8252f1feda202",
+  "code_blobs": {
+    "src/components/EventStormingCanvas.tsx": "724610c03546bb2b006e626d8c9fb53e0e56fb4b",
+    "src/components/LivingProcessMapView.tsx": "668f5819b5ebb82210118a6a916fd0b3412a7851",
+    "src/styles/process-workspace.css": "adf3c54eab8ad6022ccb2c9f0ad7a90655f662f6",
+    "src/hooks/useReducedMotionPreference.ts": "dd14caeb5d696245645b4ce150a6aa4f96325285"
+  }
+}
