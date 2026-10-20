@@ -1,0 +1,48 @@
+{
+  "passed": 28,
+  "checks": [
+    "Readable initial viewport and no horizontal page overflow",
+    "No demo toolbar; 64px rail expands by keyboard and preserves the canvas camera",
+    "Both sidebar widths persist across reload; keyboard focus survives collapsing",
+    "Every workspace remains reachable from the collapsed icon rail",
+    "All six workflow destinations and request-to-analysis navigation work without demo shortcuts",
+    "Homepage and return to the workstation remain available without the removed view-mode toolbar",
+    "Node selection updates the inspector",
+    "Dragging survives filter and selection changes",
+    "100% reading view and whole-graph overview",
+    "Lasso drag zooms into the selected region",
+    "Process-center button selects a rule and updates the inspector",
+    "Inspector status changes update the graph",
+    "Adding a node still works",
+    "Customer switching resets the appropriate canvas and preserves readable start",
+    "Continue to UX Preview still works",
+    "Responsive viewport 1440x900",
+    "Responsive viewport 390x844",
+    "Review progress reflects confirmed nodes and the review action opens an unresolved step",
+    "Legend originates at its trigger and supports Escape, keyboard return and outside dismissal",
+    "Press feedback appears before release and dragging away cancels the button activation",
+    "A manual pan interrupts the camera transition without a later snap-back",
+    "Changing the OS motion preference preserves the manually chosen canvas position",
+    "Live reduced-motion changes disable camera animation; normal motion resumes without reload",
+    "Higher-contrast preference supplies solid surfaces and defined borders",
+    "Reduced-transparency preference removes blur and uses an opaque material",
+    "Local process derivation provides completion feedback without a simulated loading state",
+    "Mobile navigation uses one compact row, closes after selection and supports Escape with focus return",
+    "Touch controls meet 44px sizing and the mobile legend stays within the viewport"
+  ],
+  "runtimeErrors": [],
+  "browser": "153.0.8010.0",
+  "viewports": [
+    "1920x1080",
+    "1440x900",
+    "390x844"
+  ],
+  "timestamp": "2026-10-20T14:39:14.599Z",
+  "base_commit": "75534097c967560031079f051011f64fb9f71c21",
+  "static_checks": [
+    "npm run lint",
+    "npm run build",
+    "node --check scripts/verify-process-workspace.cjs",
+    "git diff --check"
+  ]
+}
