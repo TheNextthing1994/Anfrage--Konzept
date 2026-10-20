@@ -9,7 +9,6 @@ import {
   Settings,
   Search,
   Plus,
-  ArrowLeft,
   SlidersHorizontal,
   Layers,
   Sparkles,
@@ -39,6 +38,7 @@ import { BuildWorkspace } from './BuildWorkspace';
 import { PortfolioRadarView } from './PortfolioRadarView';
 import { LiveFoundryIntakeSplitView } from './LiveFoundryIntakeSplitView';
 import { LivingProcessMapView } from './LivingProcessMapView';
+import { WorkstationSidebar } from './WorkstationSidebar';
 
 interface WorkstationViewProps {
   objects: StandardizedObject[];
@@ -51,9 +51,6 @@ interface WorkstationViewProps {
   onBackToLanding: () => void;
   // Specific requested trigger to immediately launch Customer Request Intake
   initialOpenIntake?: boolean;
-  forcedRequestId?: string | null;
-  forcedViewingAnalysis?: boolean | null;
-  forcedInitiativeId?: string | null;
 }
 
 export const WorkstationView: React.FC<WorkstationViewProps> = ({
@@ -65,10 +62,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
   onUpdateObjectState,
   onAddObject,
   onBackToLanding,
-  initialOpenIntake = false,
-  forcedRequestId = null,
-  forcedViewingAnalysis = null,
-  forcedInitiativeId = null
+  initialOpenIntake = false
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewInputModal, setShowNewInputModal] = useState(false);
@@ -124,7 +118,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
 
   const [selectedRequestId, setSelectedRequestId] = useState<string>('REQ-2026-017');
   const [requestsViewMode, setRequestsViewMode] = useState<'process-map' | 'split' | 'analysis' | 'list'>('process-map');
-  const [isViewingDetailedAnalysis, setIsViewingDetailedAnalysis] = useState<boolean>(true);
 
   // Active Initiatives with local persistence
   const [initiatives, setInitiatives] = useState<ActiveInitiative[]>(() => {
@@ -144,24 +137,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
       setShowRequestIntake(true);
     }
   }, [initialOpenIntake]);
-
-  useEffect(() => {
-    if (forcedRequestId) {
-      setSelectedRequestId(forcedRequestId);
-    }
-  }, [forcedRequestId]);
-
-  useEffect(() => {
-    if (forcedViewingAnalysis !== undefined && forcedViewingAnalysis !== null) {
-      setIsViewingDetailedAnalysis(forcedViewingAnalysis);
-    }
-  }, [forcedViewingAnalysis]);
-
-  useEffect(() => {
-    if (forcedInitiativeId !== undefined) {
-      setSelectedInitiativeId(forcedInitiativeId);
-    }
-  }, [forcedInitiativeId]);
 
   useEffect(() => {
     try {
@@ -476,7 +451,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
 
     setClientRequests((prev) => [newRequest, ...prev]);
     setSelectedRequestId(newRequest.id);
-    setIsViewingDetailedAnalysis(true);
+    setRequestsViewMode('analysis');
     onSectionChange('requests');
     setShowRequestIntake(false);
     triggerFeedback(`Kundenanfrage ${newId} erfolgreich analysiert: ${reusePercent}% Reusable Components!`);
@@ -486,7 +461,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
     const preset = INITIAL_CLIENT_REQUESTS[idx];
     if (preset) {
       setSelectedRequestId(preset.id);
-      setIsViewingDetailedAnalysis(true);
+      setRequestsViewMode('analysis');
       onSectionChange('requests');
       triggerFeedback(`Beispiel ${preset.id} (${preset.company}) geladen.`);
     }
@@ -781,83 +756,19 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-[#F1F5F9] flex flex-col lg:flex-row">
-      {/* LEFT SIDEBAR */}
-      <aside className="w-full lg:w-[250px] shrink-0 border-b lg:border-b-0 lg:border-r border-slate-800 bg-[#0D121C] flex flex-col justify-between">
-        <div>
-          {/* Brand Header */}
-          <div className="h-14 px-5 border-b border-slate-800 flex items-center justify-between">
-            <button
-              type="button"
-              onClick={onBackToLanding}
-              className="font-display text-base font-bold tracking-tight text-white hover:text-emerald-400 transition-colors cursor-pointer whitespace-nowrap"
-            >
-              D.T. Workstation
-            </button>
-            <span className="text-[11px] font-mono text-emerald-400">Foundry OS</span>
-          </div>
-
-          {/* Principle */}
-          <div className="px-5 py-3 border-b border-slate-800/80 bg-[#0B0F17]/40">
-            <div className="text-[11px] font-mono text-slate-400">
-              Reuse first. Compose before create.
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="p-3 space-y-1 flex lg:flex-col overflow-x-auto">
-            {navItems.map((item) => {
-              const isCurrent = activeSection === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    onSectionChange(item.id);
-                    setIsViewingDetailedAnalysis(false);
-                    setSelectedInitiativeId(null);
-                  }}
-                  className={`w-full flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    isCurrent
-                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className={isCurrent ? 'text-emerald-400' : 'text-slate-400'}>
-                      {item.icon}
-                    </span>
-                    <span>{item.label}</span>
-                  </div>
-                  {item.count !== undefined && (
-                    <span className="font-mono text-[11px] text-slate-400 tabular-nums">
-                      {item.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Bottom Return to Homepage Link */}
-        <div className="hidden lg:block p-4 border-t border-slate-800">
-          <div className="mb-3 text-xs text-slate-400 font-mono">
-            Speicher: Lokal SQLite · Autark
-          </div>
-          <button
-            type="button"
-            onClick={onBackToLanding}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium text-slate-300 border border-slate-800 rounded-lg hover:bg-slate-800/70 hover:text-white transition-colors cursor-pointer whitespace-nowrap"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Zurück zur Homepage</span>
-          </button>
-        </div>
-      </aside>
+    <div className="dt-workstation-shell bg-[#0B0F17] text-[#F1F5F9]">
+      <WorkstationSidebar
+        items={navItems}
+        activeSection={activeSection}
+        onSectionChange={(section) => {
+          onSectionChange(section);
+          setSelectedInitiativeId(null);
+        }}
+        onBackToLanding={onBackToLanding}
+      />
 
       {/* MAIN WORKSPACE COLUMN */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="dt-workstation-main flex-1 flex flex-col min-w-0">
         {/* TOPBAR WITH FOUNDRY OS WORKFLOW STEPS (Matching Screenshot) */}
         <header className="min-h-14 border-b border-slate-800 bg-[#0D121C]/95 px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3">
           {/* Workflow Tabs from Screenshot: 1. Kundenanfragen | 2. Analyse & Komposition | 3. Review & Feinschliff | 4. Build & Deployment | 5. Portfolio */}
@@ -1292,7 +1203,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                             key={req.id}
                             onClick={() => {
                               setSelectedRequestId(req.id);
-                              setIsViewingDetailedAnalysis(true);
+                              setRequestsViewMode('analysis');
                             }}
                             className={`p-5 transition-colors cursor-pointer ${
                               isSelected ? 'bg-emerald-500/10' : 'hover:bg-slate-800/40'

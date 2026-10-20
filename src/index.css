@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/process-workspace.css";
+@import "./styles/workstation-shell.css";
 
 @layer base {
   :root {

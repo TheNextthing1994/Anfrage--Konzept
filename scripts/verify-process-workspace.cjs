@@ -22,7 +22,8 @@ const path = require('node:path');
   const base = 'http://127.0.0.1:' + server.address().port;
   const browser = await chromium.launch(launchOptions);
   const page = await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
-  page.setDefaultTimeout(8000);
+  // Software-rendered screenshots can take longer than interaction checks.
+  page.setDefaultTimeout(30000);
   const errors=[]; const checks=[];
   let mobileBrowser;
   page.on('pageerror',e=>errors.push(e.message));
@@ -38,6 +39,71 @@ const path = require('node:path');
     assert.ok(await zoom()>=0.8);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     checks.push('Readable initial viewport and no horizontal page overflow');
+
+    // The compact shell must free space without replacing the actual navigation.
+    const sidebar=page.getByRole('complementary',{name:'Arbeitsbereichnavigation',exact:true});
+    const areaNav=sidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true});
+    assert.equal(await page.getByText('FOUNDRY FLOW:',{exact:true}).count(),0);
+    assert.equal((await sidebar.boundingBox()).width,64);
+    const compactWidth=(await page.locator('.dt-workstation-main').boundingBox()).width;
+    const graphTransform=await page.locator('.react-flow__viewport').evaluate(e=>e.style.transform);
+    const expandSidebar=sidebar.getByRole('button',{name:'Seitenleiste ausklappen',exact:true});
+    await expandSidebar.focus(); await page.keyboard.press('Enter');
+    await page.waitForFunction(()=>document.querySelector('.dt-sidebar').getBoundingClientRect().width===240);
+    assert.equal((await sidebar.boundingBox()).width,240);
+    assert.equal(await sidebar.getByRole('button',{name:'Seitenleiste einklappen',exact:true}).getAttribute('aria-expanded'),'true');
+    assert.equal(compactWidth-(await page.locator('.dt-workstation-main').boundingBox()).width,176);
+    assert.equal(await page.locator('.react-flow__viewport').evaluate(e=>e.style.transform),graphTransform,'Expanding navigation must preserve the canvas camera');
+    await page.screenshot({path:path.join(outputDir,'navigation-expanded.png'),fullPage:false,timeout:30000});
+    checks.push('No demo toolbar; 64px rail expands by keyboard and preserves the canvas camera');
+
+    await page.reload({waitUntil:'domcontentloaded'}); await page.locator('.dt-process-node').first().waitFor(); await settle();
+    assert.equal((await sidebar.boundingBox()).width,240);
+    const collapseSidebar=sidebar.getByRole('button',{name:'Seitenleiste einklappen',exact:true});
+    await collapseSidebar.focus(); await page.keyboard.press('Enter');
+    await page.waitForFunction(()=>document.querySelector('.dt-sidebar').getBoundingClientRect().width===64);
+    assert.equal(await sidebar.getByRole('button',{name:'Seitenleiste ausklappen',exact:true}).evaluate(e=>e===document.activeElement),true);
+    await page.reload({waitUntil:'domcontentloaded'}); await page.locator('.dt-process-node').first().waitFor(); await settle();
+    assert.equal((await sidebar.boundingBox()).width,64);
+    checks.push('Both sidebar widths persist across reload; keyboard focus survives collapsing');
+
+    const areaHeadings=[
+      ['Control Plane','Inbox — Neue Inputs'], ['Inbox','Inbox — Neue Inputs'],
+      ['Review','Review Queue'], ['Registry','Registry — Bestätigte System-Standards'],
+      ['Portfolio','Portfolio / Reopen Trigger Radar'], ['Foundry','Foundry Capabilities'],
+      ['Active','Active — Laufende Initiativen & Builds'], ['Settings','Settings'],
+      ['Requests','Prozess verstehen']
+    ];
+    for(const [label,heading] of areaHeadings){
+      await areaNav.getByRole('button',{name:label,exact:true}).click();
+      await page.getByRole('heading',{name:heading,exact:true}).waitFor();
+      assert.equal(await areaNav.getByRole('button',{name:label,exact:true}).getAttribute('aria-current'),'page');
+    }
+    checks.push('Every workspace remains reachable from the collapsed icon rail');
+
+    const workflow=page.locator('.dt-workstation-main > header');
+    await workflow.getByRole('button',{name:'1. Kundenanfrage'}).click();
+    await page.getByRole('heading',{name:'Kundenanfragen (Foundry Composition Pool)',exact:true}).waitFor();
+    await page.getByText('Hoffmann Bau GmbH',{exact:true}).first().click();
+    await page.getByRole('heading',{name:'Anfrage-Analyse & SaaS-Komposition',exact:true}).waitFor();
+    await workflow.getByRole('button',{name:'3. UX Preview'}).click();
+    await page.getByRole('heading',{name:'Kundenanfrage annehmen',exact:true}).waitFor();
+    await workflow.getByRole('button',{name:'4. Solution Composition'}).click();
+    await page.getByRole('heading',{name:'Anfrage-Analyse & SaaS-Komposition',exact:true}).waitFor();
+    await workflow.getByRole('button',{name:'5. Harden & Build'}).click();
+    await page.getByRole('heading',{name:'Aktive Initiative',exact:true}).waitFor();
+    await workflow.getByRole('button',{name:'6. Portfolio'}).click();
+    await page.getByRole('heading',{name:'Portfolio / Reopen Trigger Radar',exact:true}).waitFor();
+    await workflow.getByRole('button',{name:'2. Living Process Map'}).click();
+    await page.locator('.dt-process-node').first().waitFor(); await settle();
+    checks.push('All six workflow destinations and request-to-analysis navigation work without demo shortcuts');
+
+    await sidebar.getByRole('button',{name:'Homepage öffnen',exact:true}).click();
+    assert.equal(await page.locator('.dt-workstation-shell').count(),0);
+    await page.getByRole('button',{name:'Kostprobe starten',exact:true}).first().click();
+    await page.locator('.dt-process-node').first().waitFor(); await settle();
+    assert.equal((await sidebar.boundingBox()).width,64);
+    checks.push('Homepage and return to the workstation remain available without the removed view-mode toolbar');
 
     await node('NODE-02').locator('.dt-node-title').click();
     await settle();
@@ -227,6 +293,22 @@ const path = require('node:path');
     const mobileLegend=await mobile.locator('.dt-canvas-legend').boundingBox();
     assert.ok(mobileLegend.x>=0 && mobileLegend.x+mobileLegend.width<=390);
     await mobile.screenshot({path:path.join(outputDir,'apple-design-mobile.png'),fullPage:false});
+    const mobileSidebar=mobile.getByRole('complementary',{name:'Arbeitsbereichnavigation',exact:true});
+    assert.equal((await mobileSidebar.boundingBox()).height,57);
+    assert.equal(await mobileSidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true}).isVisible(),false);
+    await mobile.getByRole('button',{name:'Arbeitsbereiche öffnen',exact:true}).tap();
+    assert.equal(await mobileSidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true}).isVisible(),true);
+    const mobileTargets=await mobileSidebar.locator('button:visible').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().height));
+    assert.ok(mobileTargets.every(h=>h>=44));
+    await mobile.screenshot({path:path.join(outputDir,'navigation-mobile-open.png'),fullPage:false});
+    await mobileSidebar.getByRole('button',{name:'Settings',exact:true}).tap();
+    await mobile.getByRole('heading',{name:'Settings',exact:true}).waitFor();
+    assert.equal(await mobileSidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true}).isVisible(),false);
+    await mobile.getByRole('button',{name:'Arbeitsbereiche öffnen',exact:true}).tap();
+    await mobile.keyboard.press('Escape');
+    assert.equal(await mobileSidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true}).isVisible(),false);
+    assert.equal(await mobile.getByRole('button',{name:'Arbeitsbereiche öffnen',exact:true}).evaluate(e=>e===document.activeElement),true);
+    checks.push('Mobile navigation uses one compact row, closes after selection and supports Escape with focus return');
     await mobileBrowser.close();
     checks.push('Touch controls meet 44px sizing and the mobile legend stays within the viewport');
 
