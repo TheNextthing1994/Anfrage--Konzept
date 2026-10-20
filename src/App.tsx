@@ -53,9 +53,15 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F17] text-[#F1F5F9] flex flex-col">
+    <div 
+      className="min-h-screen text-[#F1F5F9] flex flex-col relative bg-cover bg-center bg-fixed bg-no-repeat"
+      style={{ backgroundImage: `url('/assets/aistudio/image_989a6b56.png')` }}
+    >
+      {/* Atmospheric dark gradient overlay to ensure perfect contrast while letting the background floor and lighting shine through */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#070b12]/70 via-[#070b12]/60 to-[#070b12]/80 backdrop-blur-[1px] pointer-events-none z-0" />
+      
       {/* BODY VIEW */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 flex flex-col relative z-10">
         {viewMode === 'landing' ? (
           <LandingPage
             objects={objects}

@@ -757,7 +757,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
   };
 
   return (
-    <div className="dt-workstation-shell bg-[#0B0F17] text-[#F1F5F9]">
+    <div className="dt-workstation-shell bg-transparent text-[#F1F5F9]">
       <WorkstationSidebar
         items={navItems}
         activeSection={activeSection}
@@ -770,9 +770,9 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
 
       {/* MAIN WORKSPACE COLUMN */}
       <div className="dt-workstation-main flex-1 flex flex-col min-w-0">
-        {/* TOPBAR WITH FOUNDRY OS WORKFLOW STEPS (Matching Screenshot) */}
-        <header className="min-h-14 border-b border-slate-800 bg-[#0D121C]/95 px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3">
-          {/* Workflow Tabs from Screenshot: 1. Kundenanfragen | 2. Analyse & Komposition | 3. Review & Feinschliff | 4. Build & Deployment | 5. Portfolio */}
+        {/* TOPBAR WITH FOUNDRY OS WORKFLOW STEPS (Translucent Glass Layer) */}
+        <header className="min-h-14 border-b border-slate-700/40 bg-[#0D121C]/65 backdrop-blur-xl px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 shadow-lg shadow-black/20">
+          {/* Workflow Tabs from Screenshot: 1. Kundenanfragen | 2. Living Process Map | 3. Analyse & Komposition | 4. SaaS Manifest | 5. Build & Deployment | 6. Portfolio */}
           <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-0.5 max-w-full">
             {/* Step 1: Kundenanfrage */}
             <button
@@ -1023,7 +1023,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="rounded-xl border border-slate-800 bg-[#111723] divide-y divide-slate-800">
+                    <div className="rounded-xl border border-slate-700/40 bg-[#111723]/65 backdrop-blur-md divide-y divide-slate-800/60 shadow-xl shadow-black/30">
                       {clientRequests.map((req) => {
                         const isSelected = selectedRequestId === req.id;
                         return (
@@ -1034,7 +1034,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                               setRequestsViewMode('analysis');
                             }}
                             className={`p-5 transition-colors cursor-pointer ${
-                              isSelected ? 'bg-emerald-500/10' : 'hover:bg-slate-800/40'
+                              isSelected ? 'bg-emerald-500/15' : 'hover:bg-slate-800/35'
                             }`}
                           >
                             <div className="flex items-start justify-between gap-4 mb-2">
@@ -1063,7 +1063,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                               </div>
                             </div>
 
-                            <div className="p-3 rounded-lg border border-slate-800/80 bg-[#0B0F17]/80 text-xs text-slate-300 italic leading-relaxed mb-3">
+                            <div className="p-3 rounded-lg border border-slate-700/30 bg-[#0B0F17]/60 backdrop-blur-sm text-xs text-slate-300 italic leading-relaxed mb-3">
                               „{req.rawRequest}“
                             </div>
 
