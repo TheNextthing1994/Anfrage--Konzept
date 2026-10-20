@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Globe2, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import type { WorkstationSection } from '../data/workstationData';
+import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
 
 export interface WorkstationNavigationItem {
   id: WorkstationSection;
@@ -21,6 +22,7 @@ const preferenceKey = 'dt_sidebar_collapsed';
 export function WorkstationSidebar({
   items, activeSection, onSectionChange, onBackToLanding
 }: WorkstationSidebarProps) {
+  const { t } = useLanguage();
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem(preferenceKey) !== 'false'; }
     catch { return true; }
@@ -49,20 +51,23 @@ export function WorkstationSidebar({
   };
 
   return (
-    <aside className="dt-sidebar" data-collapsed={collapsed} data-mobile-open={mobileOpen} aria-label="Arbeitsbereichnavigation">
+    <aside className="dt-sidebar" data-collapsed={collapsed} data-mobile-open={mobileOpen} aria-label={t('sidebarAria')}>
       <div className="dt-sidebar-mobile-bar">
         <span className="dt-sidebar-mobile-brand">D.T. Workstation</span>
-        <button
-          ref={mobileToggle}
-          type="button"
-          className="dt-sidebar-mobile-toggle"
-          aria-label={mobileOpen ? 'Arbeitsbereiche schließen' : 'Arbeitsbereiche öffnen'}
-          aria-expanded={mobileOpen}
-          aria-controls={panelId}
-          onClick={() => setMobileOpen(open => !open)}
-        >
-          {mobileOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <LanguageToggle compact />
+          <button
+            ref={mobileToggle}
+            type="button"
+            className="dt-sidebar-mobile-toggle"
+            aria-label={mobileOpen ? t('closeWorkspaces') : t('openWorkspaces')}
+            aria-expanded={mobileOpen}
+            aria-controls={panelId}
+            onClick={() => setMobileOpen(open => !open)}
+          >
+            {mobileOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+          </button>
+        </div>
       </div>
 
       <div id={panelId} className="dt-sidebar-panel">
@@ -74,7 +79,7 @@ export function WorkstationSidebar({
           </span>
         </div>
 
-        <nav className="dt-sidebar-nav" aria-label="Arbeitsbereiche">
+        <nav className="dt-sidebar-nav" aria-label={t('workspacesAria')}>
           {items.map(item => (
             <button
               key={item.id}
@@ -97,21 +102,24 @@ export function WorkstationSidebar({
         </nav>
 
         <div className="dt-sidebar-footer">
+          <div className="flex items-center justify-center p-1.5 border-b border-slate-800/60 mb-1">
+            <LanguageToggle compact={collapsed} />
+          </div>
           <button
             type="button"
             className="dt-sidebar-link"
-            aria-label="Homepage öffnen"
-            title="Homepage öffnen"
+            aria-label={t('home')}
+            title={t('home')}
             onClick={onBackToLanding}
           >
             <span className="dt-sidebar-icon" aria-hidden="true"><Globe2 /></span>
-            <span className="dt-sidebar-label">Homepage</span>
+            <span className="dt-sidebar-label">{t('home')}</span>
           </button>
           <button
             type="button"
             className="dt-sidebar-link dt-sidebar-collapse"
-            aria-label={collapsed ? 'Seitenleiste ausklappen' : 'Seitenleiste einklappen'}
-            title={collapsed ? 'Seitenleiste ausklappen' : 'Seitenleiste einklappen'}
+            aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
+            title={collapsed ? t('expandSidebar') : t('collapseSidebar')}
             aria-expanded={!collapsed}
             aria-controls={panelId}
             onClick={toggleCollapsed}
@@ -119,7 +127,7 @@ export function WorkstationSidebar({
             <span className="dt-sidebar-icon" aria-hidden="true">
               {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
             </span>
-            <span className="dt-sidebar-label">Einklappen</span>
+            <span className="dt-sidebar-label">{collapsed ? t('expand') : t('collapse')}</span>
           </button>
         </div>
       </div>

@@ -11,19 +11,9 @@ import { ProcessNodeDetail, ProcessNodeStatus } from '../data/workstationData';
 import { EventStormingNode, EventStormingNodeData } from './EventStormingNode';
 import { generateEventStormingGraph } from '../utils/eventStormingGraph';
 import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const nodeTypes = { eventStorming: EventStormingNode };
-const filters: Array<{ value: ProcessNodeStatus | 'ALL'; label: string }> = [
-  { value: 'ALL', label: 'Alle' },
-  { value: 'CONFIRMED', label: 'Bestätigt' },
-  { value: 'INFERRED', label: 'Abgeleitet' },
-  { value: 'UNCLEAR', label: 'Unklar' },
-  { value: 'QUESTION', label: 'Fragen' }
-];
-const legendItems = [
-  ['#e6bd82', 'Rolle'], ['#a7d8f5', 'Aktion'], ['#e7ad87', 'Ereignis'],
-  ['#c4b4e8', 'Regel'], ['#94d4bc', 'Sicht'], ['#e5a4b4', 'Ausnahme'], ['#b7c9df', 'System']
-];
 
 export interface EventStormingCanvasProps {
   nodes: ProcessNodeDetail[];
@@ -41,6 +31,7 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
   nodes, selectedNodeId, filterStatus, layoutOrientation,
   onSelectNode, onStatusChange, onFilterChange, onOpenAddNodeModal
 }) => {
+  const { t } = useLanguage();
   const { fitView, fitBounds, setCenter, getNodes, getViewport, screenToFlowPosition } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
   const { zoom } = useViewport();
@@ -58,6 +49,20 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
   const skipSelectionFocus = useRef<string | null>(null);
   const previousOrientation = useRef(layoutOrientation);
   const fittedOrientation = useRef<string | null>(null);
+
+  const filters: Array<{ value: ProcessNodeStatus | 'ALL'; label: string }> = useMemo(() => [
+    { value: 'ALL', label: t('filterAll') },
+    { value: 'CONFIRMED', label: t('filterConfirmed') },
+    { value: 'INFERRED', label: t('filterInferred') },
+    { value: 'UNCLEAR', label: t('filterUnclear') },
+    { value: 'QUESTION', label: t('filterQuestions') }
+  ], [t]);
+
+  const legendItems = useMemo(() => [
+    ['#e6bd82', t('typeActor')], ['#a7d8f5', t('typeCommand')], ['#e7ad87', t('typeEvent')],
+    ['#c4b4e8', t('typePolicy')], ['#94d4bc', t('typeReadModel')], ['#e5a4b4', t('typeException')], ['#b7c9df', t('typeSystem')]
+  ], [t]);
+
 
   // An OS preference change affects the next transition, not the user's position.
   useEffect(() => { motionPreference.current = reduceMotion; }, [reduceMotion]);
@@ -229,13 +234,13 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
   }[(node.data as EventStormingNodeData).node?.type] || '#b7c9df');
 
   return (
-    <section className="dt-process-canvas" aria-label="Interaktive Prozesslandkarte">
+    <section className="dt-process-canvas" aria-label={t('mapEyebrow')}>
       <div className="dt-canvas-toolbar">
         <div className="dt-canvas-toolbar-heading">
-          <span className="dt-canvas-eyebrow">Prozesslandkarte</span>
-          <span className="dt-canvas-count">{nodes.length} Schritte</span>
+          <span className="dt-canvas-eyebrow">{t('mapEyebrow')}</span>
+          <span className="dt-canvas-count">{t('stepsCount', { count: nodes.length })}</span>
         </div>
-        <div className="dt-glass dt-filter-bar" role="group" aria-label="Knoten nach Status hervorheben">
+        <div className="dt-glass dt-filter-bar" role="group" aria-label={t('workspacesAria')}>
           <Filter size={14} className="dt-toolbar-icon" aria-hidden="true" />
           {filters.map((filter) => (
             <button
@@ -253,27 +258,27 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
         </div>
         <div className="dt-canvas-tools" role="group" aria-label="Canvas-Werkzeuge">
           <div className="dt-glass dt-mode-switch">
-            <button type="button" aria-pressed={interactionMode === 'pan'} onClick={() => setInteractionMode('pan')} title="Verschieben-Modus">
-              <Hand size={14} /> <span>Verschieben</span>
+            <button type="button" aria-pressed={interactionMode === 'pan'} onClick={() => setInteractionMode('pan')} title={t('toolPan')}>
+              <Hand size={14} /> <span>{t('toolPan')}</span>
             </button>
-            <button type="button" aria-pressed={interactionMode === 'lasso'} onClick={() => setInteractionMode('lasso')} title="Rahmen ziehen und den Bereich vergrößern">
-              <BoxSelect size={14} /> <span>Lasso-Zoom</span>
+            <button type="button" aria-pressed={interactionMode === 'lasso'} onClick={() => setInteractionMode('lasso')} title={t('toolLasso')}>
+              <BoxSelect size={14} /> <span>{t('toolLasso')}</span>
             </button>
           </div>
-          <button type="button" className="dt-tool-button" onClick={focusCenter} title="Zentralen Prozessschritt lesen"><Target size={14} /><span>Prozessmitte</span></button>
-          <button type="button" className="dt-tool-button" onClick={readAt100} title="Ausgewählten Knoten in 100 % Lesegröße anzeigen">100 %</button>
-          <button type="button" className="dt-tool-button dt-icon-button" onClick={fitAll} title="Ganzes Diagramm anzeigen" aria-label="Gesamtübersicht"><Maximize2 size={15} /></button>
+          <button type="button" className="dt-tool-button" onClick={focusCenter} title={t('toolCenter')}><Target size={14} /><span>{t('toolCenter')}</span></button>
+          <button type="button" className="dt-tool-button" onClick={readAt100} title={t('tool100')}>{t('tool100')}</button>
+          <button type="button" className="dt-tool-button dt-icon-button" onClick={fitAll} title={t('toolOverview')} aria-label={t('toolOverview')}><Maximize2 size={15} /></button>
           <span className="dt-tool-spacer" />
-          <button type="button" className="dt-tool-button dt-tool-primary" onClick={onOpenAddNodeModal}><Plus size={15} /><span>Knoten</span></button>
+          <button type="button" className="dt-tool-button dt-tool-primary" onClick={onOpenAddNodeModal}><Plus size={15} /><span>{t('toolNode')}</span></button>
           <div ref={legendRef} className="dt-legend-anchor">
-            <button ref={legendTriggerRef} type="button" className="dt-tool-button dt-icon-button" onClick={() => setShowLegend((value) => !value)} aria-expanded={showLegend} aria-controls={legendId} aria-label="Farblegende" title="Farblegende"><Info size={15} /></button>
+            <button ref={legendTriggerRef} type="button" className="dt-tool-button dt-icon-button" onClick={() => setShowLegend((value) => !value)} aria-expanded={showLegend} aria-controls={legendId} aria-label={t('toolLegend')} title={t('toolLegend')}><Info size={15} /></button>
             <LazyMotion features={domAnimation} strict>
               <AnimatePresence initial={false}>
                 {showLegend && (
                   <m.aside
                     id={legendId}
                     className="dt-glass dt-canvas-legend"
-                    aria-label="Event-Storming-Farblegende"
+                    aria-label={t('toolLegend')}
                     initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -4 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={reduceMotion
@@ -281,9 +286,9 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
                       : { opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.12, ease: 'easeOut' } }}
                     transition={reduceMotion ? { duration: 0.1 } : { type: 'spring', bounce: 0, visualDuration: 0.2 }}
                   >
-                    <div className="dt-legend-heading"><span>Knotentypen</span><button type="button" onClick={() => { setShowLegend(false); legendTriggerRef.current?.focus(); }} aria-label="Legende schließen"><X size={15} /></button></div>
+                    <div className="dt-legend-heading"><span>{t('legendTitle')}</span><button type="button" onClick={() => { setShowLegend(false); legendTriggerRef.current?.focus(); }} aria-label={t('close')}><X size={15} /></button></div>
                     <div className="dt-legend-items">{legendItems.map(([color, label]) => <span key={label}><i style={{ backgroundColor: color }} />{label}</span>)}</div>
-                    <p>Die Farbe zeigt den Knotentyp. Das Status-Badge zeigt den Klärungsstand.</p>
+                    <p>{t('legendNote')}</p>
                   </m.aside>
                 )}
               </AnimatePresence>
@@ -320,9 +325,9 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
       </div>
 
       <div className="dt-canvas-footer">
-        <span><span className="dt-live-dot" />{interactionMode === 'lasso' ? 'Rahmen aufziehen, um einen Bereich zu lesen' : 'Ziehen zum Verschieben · Shift + Ziehen für Lasso-Zoom'}</span>
-        <span className="dt-zoom-value" aria-label="Aktuelle Vergrößerung">{Math.round(zoom * 100)} %</span>
-        {interactionMode === 'lasso' && <button type="button" onClick={() => setInteractionMode('pan')}>Fertig <ArrowRight size={13} /></button>}
+        <span><span className="dt-live-dot" />{interactionMode === 'lasso' ? t('footerLassoHint') : t('footerPanHint')}</span>
+        <span className="dt-zoom-value" aria-label={t('currentZoom')}>{Math.round(zoom * 100)} %</span>
+        {interactionMode === 'lasso' && <button type="button" onClick={() => setInteractionMode('pan')}>{t('done')} <ArrowRight size={13} /></button>}
       </div>
     </section>
   );

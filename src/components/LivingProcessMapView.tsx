@@ -45,6 +45,7 @@ import {
   generateArchitectureFromText,
   SystemBuildingBlock
 } from '../utils/processArchitectureGenerator';
+import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
 
 interface LivingProcessMapViewProps {
   request: ClientRequest;
@@ -65,6 +66,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
   onUpdateProcessNode,
   onSaveAllNodes
 }) => {
+  const { t, language } = useLanguage();
   const currentIndex = Math.max(
     0,
     allRequests.findIndex((r) => r.id === request.id)
@@ -278,20 +280,23 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base lg:text-lg font-bold text-white tracking-tight">
-                  Prozess verstehen
+                  {t('processTitle')}
                 </h1>
                 <span className="dt-phase-label">
-                  Schritt 2 von 6
+                  {t('processStepLabel')}
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Kundenwunsch, Ablauf und offene Fragen an einem Ort.
+                {t('processSubtitle')}
               </p>
             </div>
           </div>
 
           {/* Request Pagination & Next Stage Button */}
           <div className="flex items-center gap-3 shrink-0">
+            {/* Language Switcher */}
+            <LanguageToggle />
+
             {/* Pagination < 1 von 3 > */}
             <div className="flex items-center gap-1.5 bg-[#0B0F17] px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
               <button
@@ -299,19 +304,19 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 onClick={handlePrevRequest}
                 disabled={currentIndex === 0}
                 className="text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors p-0.5 cursor-pointer"
-                title="Vorherige Anfrage"
+                title={t('prevRequest')}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <span className="text-slate-300 font-semibold px-1">
-                {currentIndex + 1} von {allRequests.length}
+                {currentIndex + 1} {t('ofTotal')} {allRequests.length}
               </span>
               <button
                 type="button"
                 onClick={handleNextRequest}
                 disabled={currentIndex === allRequests.length - 1}
                 className="text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors p-0.5 cursor-pointer"
-                title="Nächste Anfrage"
+                title={t('nextRequest')}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -323,26 +328,26 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
               onClick={onNavigateToPreview}
               className="dt-next-stage"
             >
-              <span>UX-Vorschau öffnen</span>
+              <span>{t('openUxPreview')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        <div className="dt-process-progress" aria-label="Klärungsstand des Prozesses">
+        <div className="dt-process-progress" aria-label={t('progressAria')}>
           <div className="dt-review-progress">
             <CheckCircle2 size={16} aria-hidden="true" />
-            <span><strong>{confirmedCount} von {nodes.length}</strong> Schritten bestätigt</span>
-            <div className="dt-review-track" role="progressbar" aria-label="Bestätigte Prozessschritte" aria-valuemin={0} aria-valuemax={nodes.length || 1} aria-valuenow={confirmedCount}>
+            <span><strong>{confirmedCount} {t('ofTotal')} {nodes.length}</strong> {t('stepsConfirmedLabel')}</span>
+            <div className="dt-review-track" role="progressbar" aria-label={t('progressTrackAria')} aria-valuemin={0} aria-valuemax={nodes.length || 1} aria-valuenow={confirmedCount}>
               <div style={{ width: `${confirmationPercent}%` }} />
             </div>
           </div>
           {nextUnconfirmedNode ? (
             <button type="button" className="dt-review-next" onClick={() => setSelectedNodeId(nextUnconfirmedNode.id)}>
-              <span>{unconfirmedCount} unbestätigt</span>
-              Offenen Schritt prüfen <ArrowUpRight size={15} />
+              <span>{unconfirmedCount} {t('unconfirmedLabel')}</span>
+              {t('checkOpenStep')} <ArrowUpRight size={15} />
             </button>
-          ) : <span className="dt-review-complete">Alle Schritte bestätigt <Check size={15} /></span>}
+          ) : <span className="dt-review-complete">{t('allStepsConfirmed')} <Check size={15} /></span>}
         </div>
       </div>
 
@@ -360,7 +365,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
             <div className="flex items-center gap-2">
               <FileText className="w-4 h-4 text-cyan-400" />
               <h2 className="text-xs font-bold text-white tracking-wider uppercase font-mono">
-                Originaltext des Kunden
+                {t('originalClientText')}
               </h2>
             </div>
             <span className="text-[10px] font-mono text-cyan-300/80 bg-cyan-950/30 border border-cyan-500/20 px-2 py-0.5 rounded-full">
@@ -377,11 +382,11 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                   {request.company || request.customerName}
                 </span>
                 <span className="text-[10px] text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/30 font-mono font-semibold">
-                  {request.industry || 'Mittelstand'}
+                  {request.industry || (language === 'ru' ? 'Средний бизнес' : 'Mittelstand')}
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Kanal: {request.sourceChannel || 'E-Mail'} • Prio: {request.urgency || 'Hoch'}
+                {language === 'ru' ? 'Канал' : 'Kanal'}: {request.sourceChannel || 'E-Mail'} • {language === 'ru' ? 'Приоритет' : 'Prio'}: {request.urgency || (language === 'ru' ? 'Высокий' : 'Hoch')}
               </p>
             </div>
 
@@ -389,11 +394,11 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
-                  Eingegangenes Gesuch:
+                  {language === 'ru' ? 'Полученный запрос:' : 'Eingegangenes Gesuch:'}
                 </label>
                 <span className="text-[10px] text-cyan-400 font-mono flex items-center gap-1">
                   <Quote className="w-3 h-3" />
-                  <span>Quelle zum Schritt</span>
+                  <span>{t('sourceForStep')}</span>
                 </span>
               </div>
 
@@ -411,7 +416,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     <div className="mt-2 pt-2 border-t border-cyan-500/30 flex items-center justify-between text-[10px] text-cyan-300 font-sans">
                       <span className="flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></span>
-                        <span>Bezug: {selectedNode.id} ({selectedNode.title})</span>
+                        <span>{language === 'ru' ? 'Связь:' : 'Bezug:'} {selectedNode.id} ({selectedNode.title})</span>
                       </span>
                     </div>
                   )}
@@ -420,7 +425,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 {request.problemStatement && (
                   <div className="pt-2 border-t border-cyan-500/15">
                     <span className="text-[10px] text-slate-400 block uppercase font-bold mb-0.5">
-                      Problemstellung:
+                      {language === 'ru' ? 'Формулировка проблемы:' : 'Problemstellung:'}
                     </span>
                     <p className="text-slate-400 leading-normal font-sans text-xs">
                       {request.problemStatement}
@@ -437,7 +442,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                   className="dt-derive-button"
                 >
                   <Sparkles size={16} aria-hidden="true" />
-                  <span>Prozess aus Kundenwunsch ableiten</span>
+                  <span>{t('deriveProcessBtn')}</span>
                 </button>
 
                 <button
@@ -446,7 +451,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                   className="w-full py-2.5 px-4 rounded-full text-xs font-mono font-medium glass-capsule text-cyan-200 hover:text-white border border-cyan-500/30 hover:border-cyan-400/60 flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.5)]"
                 >
                   <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Welche Systeme müssen wir bauen? ({currentSystems.length} Module)</span>
+                  <span>{language === 'ru' ? `Какие системы нужно собрать? (${currentSystems.length} модулей)` : `Welche Systeme müssen wir bauen? (${currentSystems.length} Module)`}</span>
                 </button>
 
                 {derivationFeedback && (
@@ -610,13 +615,13 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
               </div>
 
               <div className="space-y-2">
-                <span className="dt-inspector-label">Klärungsstand festlegen</span>
-                <div className="dt-inspector-statuses" role="group" aria-label="Status des ausgewählten Schritts">
+                <span className="dt-inspector-label">{t('inspectorStatusLabel')}</span>
+                <div className="dt-inspector-statuses" role="group" aria-label={t('inspectorStatusLabel')}>
                   {([
-                    ['CONFIRMED', 'Bestätigt', CheckCircle2],
-                    ['INFERRED', 'Abgeleitet', Cpu],
-                    ['UNCLEAR', 'Unklar', AlertTriangle],
-                    ['QUESTION', 'Frage', HelpCircle]
+                    ['CONFIRMED', t('filterConfirmed'), CheckCircle2],
+                    ['INFERRED', t('filterInferred'), Cpu],
+                    ['UNCLEAR', t('filterUnclear'), AlertTriangle],
+                    ['QUESTION', language === 'ru' ? 'Вопрос' : 'Frage', HelpCircle]
                   ] as const).map(([value, label, Icon]) => (
                     <button key={value} type="button" className="dt-inspector-status" data-status={value}
                       aria-pressed={selectedNode.status === value}
@@ -627,10 +632,10 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 </div>
               </div>
 
-              {/* RATIONALE: Warum glauben wir, dass das nötig ist? */}
+              {/* RATIONALE */}
               <div className="space-y-1.5 bg-[#05080F]/90 p-3 rounded-xl border border-cyan-500/15 shadow-inner">
                 <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider font-semibold block">
-                  Warum glauben wir, dass das nötig ist?
+                  {t('inspectorWhyNeeded')}
                 </span>
                 {isEditingNode ? (
                   <textarea
@@ -646,11 +651,11 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 )}
               </div>
 
-              {/* SOURCE IN CUSTOMER TEXT: Quelle im Kundentext */}
+              {/* SOURCE IN CUSTOMER TEXT */}
               {selectedNode.sourceQuote && (
                 <div className="space-y-1 bg-[#080B11] p-2.5 rounded-lg border border-slate-800">
                   <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider font-semibold block">
-                    Quelle im Kundentext:
+                    {t('inspectorSourceInText')}
                   </span>
                   <p className="text-slate-400 italic font-mono text-[11px]">
                     "{selectedNode.sourceQuote}"
@@ -661,13 +666,13 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
               {/* DETAIL QUESTIONS & EDGE CASES */}
               <div className="space-y-2 text-xs">
                 <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block font-semibold">
-                  Detailfragen &amp; Edge Cases:
+                  {t('inspectorQuestionsEdgeCases')}
                 </span>
 
                 {/* Failure Handling */}
                 <div className="bg-[#080B11] p-2.5 rounded border border-slate-800 space-y-1">
                   <span className="text-[10px] text-slate-500 block font-bold font-mono">
-                    Was passiert im Fehlerfall / wenn nicht erkannt?
+                    {t('inspectorFailureQuestion')}
                   </span>
                   {isEditingNode ? (
                     <input
@@ -678,7 +683,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     />
                   ) : (
                     <p className="text-slate-300 text-[11px] leading-relaxed">
-                      {selectedNode.failureHandling || 'Dokument landet im Prüffach zur manuellen Prüfung.'}
+                      {selectedNode.failureHandling || t('inspectorDefaultFailure')}
                     </p>
                   )}
                 </div>
@@ -686,7 +691,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 {/* Authorized Roles */}
                 <div className="bg-[#080B11] p-2.5 rounded border border-slate-800 space-y-1">
                   <span className="text-[10px] text-slate-500 block font-bold font-mono">
-                    Wer darf korrigieren / entscheiden?
+                    {t('inspectorWhoDecides')}
                   </span>
                   {isEditingNode ? (
                     <input
@@ -697,7 +702,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     />
                   ) : (
                     <p className="text-slate-300 text-[11px]">
-                      {selectedNode.authorizedRoles || 'Büromitarbeiter, Projektleiter'}
+                      {selectedNode.authorizedRoles || t('inspectorDefaultRoles')}
                     </p>
                   )}
                 </div>
@@ -709,7 +714,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                   <div className="flex items-center justify-between text-cyan-300">
                     <span className="font-semibold flex items-center gap-1.5 text-[11px]">
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Verknüpftes UI-Element:</span>
+                      <span>{t('inspectorLinkedUiLabel')}</span>
                     </span>
                   </div>
                   <p className="text-white font-bold text-xs">
@@ -724,7 +729,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     onClick={onNavigateToPreview}
                     className="w-full mt-1 px-2.5 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded text-[11px] font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer font-semibold"
                   >
-                    <span>In UX-Preview ansehen</span>
+                    <span>{t('inspectorViewInPreview')}</span>
                     <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
@@ -732,7 +737,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
             </div>
           ) : (
             <div className="flex-1 flex items-center justify-center p-6 text-center text-xs text-slate-500 font-mono">
-              Wähle einen Knoten im Graph aus.
+              {t('inspectorSelectPrompt')}
             </div>
           )}
 
@@ -746,14 +751,14 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     onClick={handleSaveEdit}
                     className="flex-1 py-1.5 bg-emerald-500 text-slate-950 font-bold rounded text-xs transition-colors cursor-pointer"
                   >
-                    Speichern
+                    {t('save')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsEditingNode(false)}
                     className="px-3 py-1.5 bg-slate-800 text-slate-300 rounded text-xs transition-colors cursor-pointer"
                   >
-                    Abbrechen
+                    {t('cancel')}
                   </button>
                 </div>
               ) : (
@@ -764,7 +769,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-950"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Schritt bestätigen</span>
+                    <span>{t('inspectorConfirmStep')}</span>
                   </button>
 
                   <button
@@ -773,7 +778,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     className="w-full py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/50 rounded-lg text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
-                    <span>Rückfrage formulieren</span>
+                    <span>{t('inspectorAskQuestion')}</span>
                   </button>
 
                   <div className="flex gap-2">
@@ -783,14 +788,14 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                       className="flex-1 py-1.5 bg-[#0D121C] hover:bg-slate-800 text-slate-300 border border-slate-800 rounded text-xs font-mono transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Edit3 className="w-3 h-3" />
-                      <span>Ändern</span>
+                      <span>{t('edit')}</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleDeleteNode}
                       disabled={nodes.length <= 1}
                       className="px-3 py-1.5 bg-[#0D121C] hover:bg-rose-950/40 text-slate-400 hover:text-rose-400 border border-slate-800 rounded text-xs transition-colors flex items-center justify-center cursor-pointer disabled:opacity-30"
-                      title="Knoten löschen"
+                      title={t('delete')}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

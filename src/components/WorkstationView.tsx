@@ -38,6 +38,7 @@ import { PortfolioRadarView } from './PortfolioRadarView';
 import { LiveFoundryIntakeSplitView } from './LiveFoundryIntakeSplitView';
 import { LivingProcessMapView } from './LivingProcessMapView';
 import { WorkstationSidebar } from './WorkstationSidebar';
+import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
 
 interface WorkstationViewProps {
   objects: StandardizedObject[];
@@ -63,6 +64,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
   onBackToLanding,
   initialOpenIntake = false
 }) => {
+  const { t, language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewInputModal, setShowNewInputModal] = useState(false);
   const [showRequestIntake, setShowRequestIntake] = useState(initialOpenIntake);
@@ -674,25 +676,25 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
   }[] = [
     {
       id: 'overview',
-      label: 'Control Plane',
+      label: t('navOverview'),
       count: objects.length,
       icon: <Layers className="w-4 h-4" />
     },
     {
       id: 'inbox',
-      label: 'Inbox',
+      label: t('navInbox'),
       count: 5,
       icon: <Inbox className="w-4 h-4" />
     },
     {
       id: 'requests',
-      label: 'Requests',
+      label: t('navRequests'),
       count: clientRequests.length,
       icon: <MessageSquareQuote className="w-4 h-4 text-emerald-400" />
     },
     {
       id: 'review',
-      label: 'Review',
+      label: t('navReview'),
       count: objects.filter((o) =>
         ['Review pending', 'Needs clarification', 'Approved candidate'].includes(o.currentState)
       ).length,
@@ -700,13 +702,13 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
     },
     {
       id: 'registry',
-      label: 'Registry',
+      label: t('navRegistry'),
       count: objects.filter((o) => o.section === 'registry' || o.currentState === 'Approved').length,
       icon: <Database className="w-4 h-4" />
     },
     {
       id: 'portfolio',
-      label: 'Portfolio',
+      label: t('navPortfolio'),
       count: objects.filter((o) =>
         ['Parked', 'Armed', 'Reopened'].includes(o.currentState)
       ).length,
@@ -714,19 +716,19 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
     },
     {
       id: 'foundry',
-      label: 'Foundry',
+      label: t('navFoundry'),
       count: FOUNDRY_CAPABILITIES.length,
       icon: <Cpu className="w-4 h-4" />
     },
     {
       id: 'active',
-      label: 'Active',
+      label: t('navActive'),
       count: initiatives.length,
       icon: <Activity className="w-4 h-4" />
     },
     {
       id: 'settings',
-      label: 'Settings',
+      label: t('navSettings'),
       icon: <Settings className="w-4 h-4" />
     }
   ];
@@ -786,7 +788,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               }`}
             >
               <span className="w-4 h-4 rounded-full bg-blue-500/30 text-blue-400 text-[10px] flex items-center justify-center font-bold">1</span>
-              <span>1. Kundenanfrage</span>
+              <span>{t('step1')}</span>
             </button>
 
             {/* Step 2: Living Process Map (Phase 1: VERSTEHEN) */}
@@ -803,7 +805,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               }`}
             >
               <span className="w-4 h-4 rounded-full bg-purple-500/30 text-purple-400 text-[10px] flex items-center justify-center font-bold">2</span>
-              <span>2. Living Process Map</span>
+              <span>{t('step2')}</span>
             </button>
 
             {/* Step 3: UX Preview (Phase 2: ERLEBEN) */}
@@ -820,7 +822,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               }`}
             >
               <span className="w-4 h-4 rounded-full bg-emerald-500/30 text-emerald-400 text-[10px] flex items-center justify-center font-bold">3</span>
-              <span>3. UX Preview</span>
+              <span>{t('step3')}</span>
             </button>
 
             {/* Step 4: Solution Composition (Phase 3: KOMPOSITION) */}
@@ -837,7 +839,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               }`}
             >
               <span className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-400 text-[10px] flex items-center justify-center font-bold">4</span>
-              <span>4. Solution Composition</span>
+              <span>{t('step4')}</span>
             </button>
 
             {/* Step 5: Harden & Build (Phase 4: HÄRTEN) */}
@@ -856,7 +858,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               }`}
             >
               <span className="w-4 h-4 rounded-full bg-indigo-500/30 text-indigo-400 text-[10px] flex items-center justify-center font-bold">5</span>
-              <span>5. Harden &amp; Build</span>
+              <span>{t('step5')}</span>
             </button>
 
             {/* Step 6: Portfolio */}
@@ -870,19 +872,22 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               }`}
             >
               <span className="w-4 h-4 rounded-full bg-purple-500/30 text-purple-400 text-[10px] flex items-center justify-center font-bold">6</span>
-              <span>6. Portfolio</span>
+              <span>{t('step6')}</span>
             </button>
           </div>
 
           {/* Topbar Search & Prominent Action Buttons */}
           <div className="flex items-center gap-2.5 ml-auto">
+            {/* Language Switcher */}
+            <LanguageToggle />
+
             <div className="relative hidden md:block">
               <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Suchen... ⌘K"
+                placeholder={t('searchPlaceholder')}
                 className="w-36 lg:w-48 pl-8 pr-3 py-1 text-xs bg-[#0B0F17] border border-slate-800 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/60"
               />
             </div>
@@ -894,7 +899,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-emerald-400 rounded-lg hover:bg-emerald-300 transition-colors whitespace-nowrap cursor-pointer shadow-md shadow-emerald-950"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>+ Neue Anfrage</span>
+              <span>{t('newRequest')}</span>
             </button>
           </div>
         </header>

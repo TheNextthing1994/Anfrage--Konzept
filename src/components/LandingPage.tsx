@@ -10,6 +10,7 @@ import {
   ACTIVE_INITIATIVES,
   WorkstationSection
 } from '../data/workstationData';
+import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
 
 interface LandingPageProps {
   objects: StandardizedObject[];
@@ -22,6 +23,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   objects,
   onOpenWorkstation
 }) => {
+  const { t, language } = useLanguage();
   const [heroTab, setHeroTab] = useState<PreviewTab>('requests');
   const [selectedStandardObjId, setSelectedStandardObjId] = useState<string>('OBJ-15K-02');
   const [activePipelineStage, setActivePipelineStage] = useState<number>(4);
@@ -107,25 +109,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               href="#systematik"
               className="hover:text-slate-100 hover:underline underline-offset-8 decoration-emerald-500/70 transition-colors whitespace-nowrap"
             >
-              Systematik
+              {t('landingSystematic')}
             </a>
             <a
               href="#objekt-standard"
               className="hover:text-slate-100 hover:underline underline-offset-8 decoration-emerald-500/70 transition-colors whitespace-nowrap"
             >
-              15K Objekt
+              {t('landingStandardObj')}
             </a>
             <a
               href="#reopen-trigger"
               className="hover:text-slate-100 hover:underline underline-offset-8 decoration-emerald-500/70 transition-colors whitespace-nowrap"
             >
-              Reopen &amp; SaaS Build
+              {t('landingReopen')}
             </a>
             <a
               href="#zielgruppe"
               className="hover:text-slate-100 hover:underline underline-offset-8 decoration-emerald-500/70 transition-colors whitespace-nowrap"
             >
-              Für Builder
+              {t('landingForBuilders')}
             </a>
             <button
               type="button"
@@ -133,25 +135,26 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               className="hover:text-slate-100 hover:underline underline-offset-8 decoration-emerald-500/70 transition-colors whitespace-nowrap cursor-pointer flex items-center gap-1.5"
             >
               <span className="text-emerald-400">●</span>
-              <span>Kundenanfragen</span>
+              <span>{t('landingClientRequests')}</span>
             </button>
           </nav>
 
-          {/* Zone 3: Primary actions */}
+          {/* Zone 3: Primary actions & Language toggle */}
           <div className="flex items-center gap-3">
+            <LanguageToggle />
             <button
               type="button"
               onClick={() => onOpenWorkstation('registry', 'OBJ-15K-01')}
               className="hidden sm:inline-flex items-center px-3.5 py-2 text-xs font-medium text-slate-300 border border-slate-800 rounded-lg hover:bg-slate-900 hover:text-white transition-colors whitespace-nowrap cursor-pointer"
             >
-              Workstation ansehen
+              {t('landingViewWorkstation')}
             </button>
             <button
               type="button"
               onClick={() => onOpenWorkstation('requests')}
               className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-950 bg-emerald-400 rounded-lg hover:bg-emerald-300 transition-colors whitespace-nowrap cursor-pointer"
             >
-              <span>Kostprobe starten</span>
+              <span>{t('landingStartDemo')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
