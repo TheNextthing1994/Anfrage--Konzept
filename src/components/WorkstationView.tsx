@@ -11,7 +11,6 @@ import {
   Plus,
   SlidersHorizontal,
   Layers,
-  Sparkles,
   MessageSquareQuote,
   CheckCircle2,
   ChevronRight,
@@ -946,46 +945,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
           ) : ((activeSection === 'requests' && requestsViewMode === 'process-map') || activeSection === 'process-map') ? (
             /* CASE 2A: LIVING PROCESS MAP (PHASE 1: VERSTEHEN - EVENT STORMING) */
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('process-map')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 flex items-center gap-2 cursor-pointer shadow-sm shadow-purple-950"
-                >
-                  <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
-                  <span>🗺️ 2. Living Process Map (Event Storming)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('split')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>🖥️ 3. UX Preview &amp; Reverse-Traceability</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('analysis')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer"
-                >
-                  <span>📄 4. Solution Composition</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('list')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer"
-                >
-                  <span>📋 Tabellen-Übersicht ({clientRequests.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowRequestIntake(true)}
-                  className="sm:ml-auto px-3.5 py-1.5 rounded-lg text-xs font-mono text-emerald-400 hover:text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 cursor-pointer font-semibold"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>+ Neues Kundenproblem erfassen</span>
-                </button>
-              </div>
-
               <LivingProcessMapView
                 request={selectedRequest || clientRequests[0]}
                 allRequests={clientRequests}
@@ -1028,46 +987,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
           ) : activeSection === 'requests' && requestsViewMode === 'split' ? (
             /* CASE 2B: FOUNDRY OS LIVE SPLIT VIEW (Matching User Screenshot & Prompt) */
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('process-map')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>🗺️ 2. Living Process Map</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('split')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-2 cursor-pointer shadow-sm shadow-emerald-950"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>🖥️ 3. UX Preview &amp; Fließband ({selectedRequest?.company || selectedRequest?.customerName || selectedRequestId})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('analysis')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer"
-                >
-                  <span>📄 4. Solution Composition</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('list')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer"
-                >
-                  <span>📋 Tabellen-Übersicht ({clientRequests.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowRequestIntake(true)}
-                  className="sm:ml-auto px-3.5 py-1.5 rounded-lg text-xs font-mono text-emerald-400 hover:text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 cursor-pointer font-semibold"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>+ Neues Kundenproblem erfassen</span>
-                </button>
-              </div>
-
               <LiveFoundryIntakeSplitView
                 requests={clientRequests}
                 selectedRequestId={selectedRequestId}
@@ -1088,39 +1007,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
           ) : activeSection === 'requests' && requestsViewMode === 'analysis' && selectedRequest ? (
             /* CASE 2B: DETAILED REQUEST ANALYSIS SCREEN (Section 4 & 5-11 of prompt) */
             <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('split')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer flex items-center gap-1.5"
-                >
-                  <span>← 🖥️ Zurück zur Live-Komposition</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('analysis')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-2 cursor-pointer shadow-sm shadow-cyan-950"
-                >
-                  <span>📄 Detaillierte Analyse &amp; SaaS-Komposition ({selectedRequest.id})</span>
-                  <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRequestsViewMode('list')}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer"
-                >
-                  <span>📋 Alle Kundenanfragen ({clientRequests.length})</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowRequestIntake(true)}
-                  className="sm:ml-auto px-3.5 py-1.5 rounded-lg text-xs font-mono text-emerald-400 hover:text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 cursor-pointer font-semibold"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>+ Neues Kundenproblem lösen</span>
-                </button>
-              </div>
-
               <RequestAnalysisView
                 request={selectedRequest}
                 onApproveAndBuild={handleApproveAndBuild}
@@ -1148,42 +1034,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                 {/* REQUESTS LIST SECTION */}
                 {activeSection === 'requests' && (
                   <section className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
-                      <button
-                        type="button"
-                        onClick={() => setRequestsViewMode('split')}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer flex items-center gap-1.5"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                        <span>🖥️ Live-Komposition &amp; Fließband</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedRequestId(selectedRequest?.id || 'REQ-2026-017');
-                          setRequestsViewMode('analysis');
-                        }}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800 transition-colors cursor-pointer flex items-center gap-1.5"
-                      >
-                        <span>📄 Detaillierte Analyse &amp; Manifest</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRequestsViewMode('list')}
-                        className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-2 cursor-pointer shadow-sm shadow-emerald-950"
-                      >
-                        <span>📋 Alle Kundenanfragen ({clientRequests.length})</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowRequestIntake(true)}
-                        className="sm:ml-auto px-3.5 py-1.5 rounded-lg text-xs font-mono text-emerald-400 hover:text-emerald-300 border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors flex items-center gap-1.5 cursor-pointer font-semibold"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>+ Neues Kundenproblem lösen</span>
-                      </button>
-                    </div>
-
                     <div className="flex items-center justify-between">
                       <div>
                         <h2 className="text-base font-semibold text-white">

@@ -40,6 +40,13 @@ const path = require('node:path');
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
     checks.push('Readable initial viewport and no horizontal page overflow');
 
+    const assertSingleNavigation=async()=>{
+      assert.equal(await page.getByRole('button',{name:/Tabellen-Übersicht|Neues Kundenproblem/}).count(),0);
+      assert.equal(await page.getByText('4. Solution Composition',{exact:true}).count(),1);
+      assert.equal(await page.getByRole('button',{name:/Neue Anfrage/}).count(),1);
+    };
+    await assertSingleNavigation();
+
     // The compact shell must free space without replacing the actual navigation.
     const sidebar=page.getByRole('complementary',{name:'Arbeitsbereichnavigation',exact:true});
     const areaNav=sidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true});
@@ -84,12 +91,16 @@ const path = require('node:path');
     const workflow=page.locator('.dt-workstation-main > header');
     await workflow.getByRole('button',{name:'1. Kundenanfrage'}).click();
     await page.getByRole('heading',{name:'Kundenanfragen (Foundry Composition Pool)',exact:true}).waitFor();
+    await assertSingleNavigation();
     await page.getByText('Hoffmann Bau GmbH',{exact:true}).first().click();
     await page.getByRole('heading',{name:'Anfrage-Analyse & SaaS-Komposition',exact:true}).waitFor();
     await workflow.getByRole('button',{name:'3. UX Preview'}).click();
     await page.getByRole('heading',{name:'Kundenanfrage annehmen',exact:true}).waitFor();
+    await assertSingleNavigation();
     await workflow.getByRole('button',{name:'4. Solution Composition'}).click();
     await page.getByRole('heading',{name:'Anfrage-Analyse & SaaS-Komposition',exact:true}).waitFor();
+    await assertSingleNavigation();
+    checks.push('Process, preview, analysis and request-list views use one workflow navigation and one intake action');
     await workflow.getByRole('button',{name:'5. Harden & Build'}).click();
     await page.getByRole('heading',{name:'Aktive Initiative',exact:true}).waitFor();
     await workflow.getByRole('button',{name:'6. Portfolio'}).click();
