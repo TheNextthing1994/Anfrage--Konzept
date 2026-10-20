@@ -38,7 +38,7 @@ import { PortfolioRadarView } from './PortfolioRadarView';
 import { LiveFoundryIntakeSplitView } from './LiveFoundryIntakeSplitView';
 import { LivingProcessMapView } from './LivingProcessMapView';
 import { WorkstationSidebar } from './WorkstationSidebar';
-import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface WorkstationViewProps {
   objects: StandardizedObject[];
@@ -873,33 +873,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
             >
               <span className="w-4 h-4 rounded-full bg-purple-500/30 text-purple-400 text-[10px] flex items-center justify-center font-bold">6</span>
               <span>{t('step6')}</span>
-            </button>
-          </div>
-
-          {/* Topbar Search & Prominent Action Buttons */}
-          <div className="flex items-center gap-2.5 ml-auto">
-            {/* Language Switcher */}
-            <LanguageToggle />
-
-            <div className="relative hidden md:block">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('searchPlaceholder')}
-                className="w-36 lg:w-48 pl-8 pr-3 py-1 text-xs bg-[#0B0F17] border border-slate-800 rounded-lg text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500/60"
-              />
-            </div>
-
-            {/* MANDATORY GLOBAL QUICK ACTION: + Neue Anfrage */}
-            <button
-              type="button"
-              onClick={() => setShowRequestIntake(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-950 bg-emerald-400 rounded-lg hover:bg-emerald-300 transition-colors whitespace-nowrap cursor-pointer shadow-md shadow-emerald-950"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>{t('newRequest')}</span>
             </button>
           </div>
         </header>

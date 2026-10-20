@@ -45,7 +45,7 @@ import {
   generateArchitectureFromText,
   SystemBuildingBlock
 } from '../utils/processArchitectureGenerator';
-import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface LivingProcessMapViewProps {
   request: ClientRequest;
@@ -294,9 +294,6 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
 
           {/* Request Pagination & Next Stage Button */}
           <div className="flex items-center gap-3 shrink-0">
-            {/* Language Switcher */}
-            <LanguageToggle />
-
             {/* Pagination < 1 von 3 > */}
             <div className="flex items-center gap-1.5 bg-[#0B0F17] px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-mono">
               <button
