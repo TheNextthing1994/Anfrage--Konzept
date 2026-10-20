@@ -170,7 +170,7 @@
 .dt-canvas-feedback { position: absolute; z-index: 8; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100% - 32px); padding: 10px 14px; border-radius: 999px; background-color: rgba(30, 48, 72, 0.88); color: #edf5ff; font-size: 12px; pointer-events: none; }
 
 @media (min-width: 1280px) {
-  .dt-process-layout { height: calc(100dvh - 325px); min-height: 640px; }
+  .dt-process-layout { height: calc(100dvh - 265px); min-height: 640px; }
 }
 
 @media (max-width: 1279px) {

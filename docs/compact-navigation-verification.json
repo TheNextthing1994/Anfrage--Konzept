@@ -1,10 +1,11 @@
 {
-  "passed": 28,
+  "passed": 29,
   "checks": [
     "Readable initial viewport and no horizontal page overflow",
     "No demo toolbar; 64px rail expands by keyboard and preserves the canvas camera",
     "Both sidebar widths persist across reload; keyboard focus survives collapsing",
     "Every workspace remains reachable from the collapsed icon rail",
+    "Process, preview, analysis and request-list views use one workflow navigation and one intake action",
     "All six workflow destinations and request-to-analysis navigation work without demo shortcuts",
     "Homepage and return to the workstation remain available without the removed view-mode toolbar",
     "Node selection updates the inspector",
@@ -37,8 +38,8 @@
     "1440x900",
     "390x844"
   ],
-  "timestamp": "2026-10-20T14:39:14.599Z",
-  "base_commit": "75534097c967560031079f051011f64fb9f71c21",
+  "timestamp": "2026-10-20T15:14:11.278Z",
+  "base_commit": "cce678b27993034efad62efd629ba9f602b28c4a",
   "static_checks": [
     "npm run lint",
     "npm run build",
