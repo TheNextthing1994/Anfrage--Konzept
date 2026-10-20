@@ -18,6 +18,8 @@ Die vorherige Anzeige „84 % Prozess-Verständnis“ war eine Gewichtung aus St
 
 Die Hauptaktion, Statusauswahl und Quellenbeschriftung sind kürzer und einheitlich deutsch. Zurückgenommene Konturen und weniger gleichzeitige Akzentfarben geben dem Graph mehr Gewicht. Presszustand, Tastaturfokus, größere Touch-Ziele und die am Auslöser verankerte Legende machen die Bedienung konkreter.
 
+Für die Bedienelemente gilt die visuelle Abstimmung vom 20.10.: Die vier Status-Chips erscheinen ausschließlich als klickbare Filter mit Zählern über dem Graphen (Grün, Cyan, Gelb und Rosa). Pan/Lasso und die Statusauswahl im Inspektor verwenden runde Glaskapseln. Die Schrift und Farbgebung der Inspektor-Auswahl stammen aus der neuen Gestaltung; auch die beiden großen Aktionen rechts unten behalten die neue Gestaltung. Der aktive Filter bleibt zusätzlich durch Kontur und Füllung erkennbar, bei erhöhtem Systemkontrast wird die Palette durch gut abgegrenzte helle Beschriftungen ersetzt.
+
 ## Prüfung der 17 Themen
 
 Die Kurzbezeichnungen unten sind eigene Zusammenfassungen. „Beibehalten“ bezeichnet vorhandenes Verhalten, das im Test überprüft wurde. Nicht benötigte Gesten werden durch den Skill nicht zu neuen Produktfunktionen.
