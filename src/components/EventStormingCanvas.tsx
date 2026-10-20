@@ -1,4 +1,5 @@
-import React, { useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useCallback, useState, useEffect, useRef, useId } from 'react';
+import { AnimatePresence, LazyMotion, domAnimation, m } from 'motion/react';
 import {
   ReactFlow, ReactFlowProvider, Background, Controls, MiniMap,
   useNodesState, useEdgesState, useReactFlow, useNodesInitialized, useViewport,
@@ -9,6 +10,7 @@ import { Filter, Hand, BoxSelect, Target, Maximize2, Plus, Info, X, Check, Arrow
 import { ProcessNodeDetail, ProcessNodeStatus } from '../data/workstationData';
 import { EventStormingNode, EventStormingNodeData } from './EventStormingNode';
 import { generateEventStormingGraph } from '../utils/eventStormingGraph';
+import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference';
 
 const nodeTypes = { eventStorming: EventStormingNode };
 const filters: Array<{ value: ProcessNodeStatus | 'ALL'; label: string }> = [
@@ -42,15 +44,42 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
   const { fitView, fitBounds, setCenter, getNodes, getViewport, screenToFlowPosition } = useReactFlow();
   const nodesInitialized = useNodesInitialized();
   const { zoom } = useViewport();
+  const reduceMotion = useReducedMotionPreference();
+  const motionPreference = useRef(reduceMotion);
   const [showLegend, setShowLegend] = useState(false);
   const [interactionMode, setInteractionMode] = useState<'pan' | 'lasso'>('pan');
   const [feedback, setFeedback] = useState<string | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const legendRef = useRef<HTMLDivElement>(null);
+  const legendTriggerRef = useRef<HTMLButtonElement>(null);
+  const legendId = useId();
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const selectionHandled = useRef(false);
   const skipSelectionFocus = useRef<string | null>(null);
   const previousOrientation = useRef(layoutOrientation);
   const fittedOrientation = useRef<string | null>(null);
+
+  // An OS preference change affects the next transition, not the user's position.
+  useEffect(() => { motionPreference.current = reduceMotion; }, [reduceMotion]);
+
+  useEffect(() => {
+    if (!showLegend) return;
+    const dismiss = (event: PointerEvent) => {
+      if (!legendRef.current?.contains(event.target as HTMLElement)) setShowLegend(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowLegend(false);
+        legendTriggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [showLegend]);
 
   const initialGraph = useMemo(() => generateEventStormingGraph(nodes, {
     orientation: layoutOrientation, selectedNodeId, filterStatus, onSelectNode, onStatusChange
@@ -115,7 +144,7 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
       top + height * viewport.zoom <= stage.clientHeight - 12;
     if (!visible) {
       void setCenter(node.position.x + width / 2, node.position.y + height / 2, {
-        zoom: Math.max(viewport.zoom, 0.8), duration: 300
+        zoom: Math.max(viewport.zoom, 0.8), duration: motionPreference.current ? 0 : 240, interpolate: 'linear'
       });
     }
   }, [selectedNodeId, nodesInitialized, getNodes, getViewport, setCenter]);
@@ -127,9 +156,9 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
   }, [feedback]);
 
   const fitAll = useCallback(() => {
-    void fitView({ padding: 0.14, duration: 350 });
+    void fitView({ padding: 0.14, duration: reduceMotion ? 0 : 280, interpolate: 'linear' });
     setFeedback('Alle Prozessschritte im Überblick');
-  }, [fitView]);
+  }, [fitView, reduceMotion]);
 
   const focusCenter = useCallback(() => {
     const current = getNodes();
@@ -138,17 +167,17 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
     if (!focal) return;
     skipSelectionFocus.current = focal.id;
     onSelectNode(focal.id);
-    void fitView({ nodes: [focal], padding: 0.18, minZoom: 0.85, maxZoom: 1, duration: 350 });
+    void fitView({ nodes: [focal], padding: 0.18, minZoom: 0.85, maxZoom: 1, duration: reduceMotion ? 0 : 280, interpolate: 'linear' });
     setFeedback('Zentraler Prozessschritt im Fokus');
-  }, [getNodes, onSelectNode, fitView]);
+  }, [getNodes, onSelectNode, fitView, reduceMotion]);
 
   const readAt100 = useCallback(() => {
     const current = getNodes();
     const selected = current.find((item) => item.id === selectedNodeId) || current[0];
     if (!selected) return;
-    void fitView({ nodes: [selected], minZoom: 1, maxZoom: 1, padding: 0, duration: 300 });
+    void fitView({ nodes: [selected], minZoom: 1, maxZoom: 1, padding: 0, duration: reduceMotion ? 0 : 240, interpolate: 'linear' });
     setFeedback('Ausgewählter Knoten in 100 % Lesegröße');
-  }, [getNodes, selectedNodeId, fitView]);
+  }, [getNodes, selectedNodeId, fitView, reduceMotion]);
 
   const zoomSelection = useCallback((selected: Node[]) => {
     if (!selected.length) return;
@@ -156,9 +185,9 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
     // Lasso is a zoom tool; the inspector still has one focused node.
     setFlowNodes((current) => current.map((node) => ({ ...node, selected: node.id === selected[0].id })));
     onSelectNode(selected[0].id);
-    void fitView({ nodes: selected, padding: 0.18, maxZoom: 1.35, duration: 350 });
+    void fitView({ nodes: selected, padding: 0.18, maxZoom: 1.35, duration: reduceMotion ? 0 : 280, interpolate: 'linear' });
     setFeedback(selected.length + ' Knoten im Fokus');
-  }, [onSelectNode, fitView, setFlowNodes]);
+  }, [onSelectNode, fitView, setFlowNodes, reduceMotion]);
 
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
     if (event.button !== 0 || (!event.shiftKey && interactionMode !== 'lasso')) return;
@@ -183,10 +212,10 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
     });
     if (selected.length) zoomSelection(selected);
     else {
-      void fitBounds(box, { padding: 0.15, duration: 350 });
+      void fitBounds(box, { padding: 0.15, duration: reduceMotion ? 0 : 280, interpolate: 'linear' });
       setFeedback('Ausgewählter Bereich im Fokus');
     }
-  }, [screenToFlowPosition, getNodes, zoomSelection, fitBounds]);
+  }, [screenToFlowPosition, getNodes, zoomSelection, fitBounds, reduceMotion]);
 
   const handleSelectionEnd = useCallback(() => {
     requestAnimationFrame(() => {
@@ -225,7 +254,7 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
         <div className="dt-canvas-tools" role="group" aria-label="Canvas-Werkzeuge">
           <div className="dt-glass dt-mode-switch">
             <button type="button" aria-pressed={interactionMode === 'pan'} onClick={() => setInteractionMode('pan')} title="Verschieben-Modus">
-              <Hand size={14} /> <span>Pan</span>
+              <Hand size={14} /> <span>Verschieben</span>
             </button>
             <button type="button" aria-pressed={interactionMode === 'lasso'} onClick={() => setInteractionMode('lasso')} title="Rahmen ziehen und den Bereich vergrößern">
               <BoxSelect size={14} /> <span>Lasso-Zoom</span>
@@ -236,7 +265,30 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
           <button type="button" className="dt-tool-button dt-icon-button" onClick={fitAll} title="Ganzes Diagramm anzeigen" aria-label="Gesamtübersicht"><Maximize2 size={15} /></button>
           <span className="dt-tool-spacer" />
           <button type="button" className="dt-tool-button dt-tool-primary" onClick={onOpenAddNodeModal}><Plus size={15} /><span>Knoten</span></button>
-          <button type="button" className="dt-tool-button dt-icon-button" onClick={() => setShowLegend((value) => !value)} aria-expanded={showLegend} aria-label="Farblegende" title="Farblegende"><Info size={15} /></button>
+          <div ref={legendRef} className="dt-legend-anchor">
+            <button ref={legendTriggerRef} type="button" className="dt-tool-button dt-icon-button" onClick={() => setShowLegend((value) => !value)} aria-expanded={showLegend} aria-controls={legendId} aria-label="Farblegende" title="Farblegende"><Info size={15} /></button>
+            <LazyMotion features={domAnimation} strict>
+              <AnimatePresence initial={false}>
+                {showLegend && (
+                  <m.aside
+                    id={legendId}
+                    className="dt-glass dt-canvas-legend"
+                    aria-label="Event-Storming-Farblegende"
+                    initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={reduceMotion
+                      ? { opacity: 0, transition: { duration: 0.1 } }
+                      : { opacity: 0, scale: 0.96, y: -4, transition: { duration: 0.12, ease: 'easeOut' } }}
+                    transition={reduceMotion ? { duration: 0.1 } : { type: 'spring', bounce: 0, visualDuration: 0.2 }}
+                  >
+                    <div className="dt-legend-heading"><span>Knotentypen</span><button type="button" onClick={() => { setShowLegend(false); legendTriggerRef.current?.focus(); }} aria-label="Legende schließen"><X size={15} /></button></div>
+                    <div className="dt-legend-items">{legendItems.map(([color, label]) => <span key={label}><i style={{ backgroundColor: color }} />{label}</span>)}</div>
+                    <p>Die Farbe zeigt den Knotentyp. Das Status-Badge zeigt den Klärungsstand.</p>
+                  </m.aside>
+                )}
+              </AnimatePresence>
+            </LazyMotion>
+          </div>
         </div>
       </div>
 
@@ -264,13 +316,6 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
           <MiniMap nodeColor={minimapNodeColor} maskColor="rgba(13,23,39,0.72)" className="dt-flow-minimap" zoomable pannable />
         </ReactFlow>
 
-        {showLegend && (
-          <aside className="dt-glass dt-canvas-legend" aria-label="Event-Storming-Farblegende">
-            <div className="dt-legend-heading"><span>Knotentypen</span><button type="button" onClick={() => setShowLegend(false)} aria-label="Legende schließen"><X size={15} /></button></div>
-            <div className="dt-legend-items">{legendItems.map(([color, label]) => <span key={label}><i style={{ backgroundColor: color }} />{label}</span>)}</div>
-            <p>Die Farbe zeigt den Knotentyp. Das Status-Badge zeigt den Klärungsstand.</p>
-          </aside>
-        )}
         {feedback && <div className="dt-glass dt-canvas-feedback" role="status"><Check size={14} />{feedback}</div>}
       </div>
 

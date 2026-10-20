@@ -84,7 +84,6 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
 
   const [currentSystems, setCurrentSystems] = useState<SystemBuildingBlock[]>(initialArch.systems);
   const [showSystemsModal, setShowSystemsModal] = useState<boolean>(false);
-  const [isDerivingArchitecture, setIsDerivingArchitecture] = useState<boolean>(false);
   const [derivationFeedback, setDerivationFeedback] = useState<string | null>(null);
 
   // Update nodes when switching requests
@@ -106,22 +105,22 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
   }, [request.id, request.rawRequest]);
 
   const handleDeriveArchitecture = () => {
-    setIsDerivingArchitecture(true);
-    setTimeout(() => {
-      const arch = generateArchitectureFromText(request.rawRequest, request.customerName, request.company);
-      setNodes(arch.nodes);
-      setCurrentSystems(arch.systems);
-      setSelectedNodeId(arch.nodes[0]?.id || 'NODE-01');
-      setIsDerivingArchitecture(false);
-      setDerivationFeedback(
-        `Knoten-Architektur erfolgreich abgeleitet: ${arch.nodes.length} Event-Storming Knoten & ${arch.systems.length} Kernsysteme bereitgestellt!`
-      );
-      if (onSaveAllNodes) {
-        onSaveAllNodes(arch.nodes);
-      }
-      setTimeout(() => setDerivationFeedback(null), 5000);
-    }, 300);
+    // This is a local, synchronous derivation; no simulated loading delay.
+    const arch = generateArchitectureFromText(request.rawRequest, request.customerName, request.company);
+    setNodes(arch.nodes);
+    setCurrentSystems(arch.systems);
+    setSelectedNodeId(arch.nodes[0]?.id || 'NODE-01');
+    setDerivationFeedback(`${arch.nodes.length} Prozessschritte und ${arch.systems.length} Systeme abgeleitet.`);
+    onSaveAllNodes?.(arch.nodes);
   };
+
+  useEffect(() => {
+    if (!derivationFeedback) return;
+    const timer = setTimeout(() => setDerivationFeedback(null), 5000);
+    return () => clearTimeout(timer);
+  }, [derivationFeedback]);
+
+  useEffect(() => setDerivationFeedback(null), [request.id]);
 
   const [selectedNodeId, setSelectedNodeId] = useState<string>(
     nodes.find((n) => n.id === 'NODE-04')?.id || nodes[0]?.id || 'NODE-01'
@@ -157,14 +156,11 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
 
   // Derived counts
   const confirmedCount = nodes.filter((n) => n.status === 'CONFIRMED').length;
-  const inferredCount = nodes.filter((n) => n.status === 'INFERRED').length;
-  const unclearCount = nodes.filter((n) => n.status === 'UNCLEAR').length;
-  const questionCount = nodes.filter((n) => n.status === 'QUESTION').length;
-  const totalCount = nodes.length || 1;
-  const understandingScore = Math.min(
-    100,
-    Math.round(((confirmedCount * 1.0 + inferredCount * 0.7 + unclearCount * 0.2) / totalCount) * 100)
-  );
+  const unconfirmedCount = nodes.length - confirmedCount;
+  const confirmationPercent = Math.round(confirmedCount / (nodes.length || 1) * 100);
+  const nextUnconfirmedNode = nodes.find((node) => node.status === 'QUESTION') ||
+    nodes.find((node) => node.status === 'UNCLEAR') ||
+    nodes.find((node) => node.status !== 'CONFIRMED');
 
   const handlePrevRequest = () => {
     if (currentIndex > 0) {
@@ -276,20 +272,20 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
       <div className="dt-process-header p-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <span className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center font-bold text-sm font-mono shadow-md shadow-purple-950">
+            <span className="dt-header-symbol">
               <GitBranch className="w-5 h-5" />
             </span>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base lg:text-lg font-bold text-white tracking-tight">
-                  Living Process Map (Event Storming)
+                  Prozess verstehen
                 </h1>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30 uppercase font-semibold">
-                  Phase 1: Verstehen
+                <span className="dt-phase-label">
+                  Schritt 2 von 6
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Strukturiert den Original-Kundenwunsch mit Jev in ein lebendiges Event-Storming-Modell. Zeigt nicht wie Jev arbeitet, sondern was der Kunde eigentlich meint.
+                Kundenwunsch, Ablauf und offene Fragen an einem Ort.
               </p>
             </div>
           </div>
@@ -325,59 +321,28 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
             <button
               type="button"
               onClick={onNavigateToPreview}
-              className="px-4 py-2 bg-gradient-to-r from-cyan-400 to-emerald-400 hover:from-cyan-300 hover:to-emerald-300 text-slate-950 font-bold text-xs rounded-full transition-all shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center gap-2 cursor-pointer font-mono hover:scale-[1.02] active:scale-[0.98]"
+              className="dt-next-stage"
             >
-              <span>Prozess verstanden → UX Preview erleben</span>
+              <span>UX-Vorschau öffnen</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        {/* METRICS ROW: Understanding Score in Frosted Glass Capsule */}
-        <div className="pt-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-          {/* Understanding Score Bar */}
-          <div className="dt-process-progress md:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-capsule p-2.5 px-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
-                <Sparkles className="w-4 h-4 text-cyan-400" />
-                <span>Prozess-Verständnis:</span>
-                <span className="font-mono font-bold text-cyan-300 text-sm">
-                  {understandingScore} %
-                </span>
-              </div>
-              <div className="hidden sm:block w-36 h-2 bg-[#060A13] rounded-full overflow-hidden border border-cyan-500/20">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_8px_#22d3ee]"
-                  style={{ width: `${understandingScore}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs font-mono">
-              <span className="text-emerald-400 flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_5px_#10b981]"></span>
-                {confirmedCount} Bestätigt
-              </span>
-              <span className="text-cyan-300 flex items-center gap-1.5 bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_5px_#22d3ee]"></span>
-                {inferredCount} Abgeleitet
-              </span>
-              <span className="text-amber-300 flex items-center gap-1.5 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_5px_#f59e0b]"></span>
-                {unclearCount} Unklar
-              </span>
-              <span className="text-rose-300 flex items-center gap-1.5 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse shadow-[0_0_5px_#f43f5e]"></span>
-                {questionCount} Fragen
-              </span>
-              <span className="text-slate-600 hidden md:inline">|</span>
-              <span className="text-[11px] text-slate-400 hidden md:inline">
-                {questionCount === 0 && unclearCount === 0
-                  ? '✓ Vollständig geklärt'
-                  : 'Klärungsbedarf vor Umsetzung'}
-              </span>
+        <div className="dt-process-progress" aria-label="Klärungsstand des Prozesses">
+          <div className="dt-review-progress">
+            <CheckCircle2 size={16} aria-hidden="true" />
+            <span><strong>{confirmedCount} von {nodes.length}</strong> Schritten bestätigt</span>
+            <div className="dt-review-track" role="progressbar" aria-label="Bestätigte Prozessschritte" aria-valuemin={0} aria-valuemax={nodes.length || 1} aria-valuenow={confirmedCount}>
+              <div style={{ width: `${confirmationPercent}%` }} />
             </div>
           </div>
+          {nextUnconfirmedNode ? (
+            <button type="button" className="dt-review-next" onClick={() => setSelectedNodeId(nextUnconfirmedNode.id)}>
+              <span>{unconfirmedCount} unbestätigt</span>
+              Offenen Schritt prüfen <ArrowUpRight size={15} />
+            </button>
+          ) : <span className="dt-review-complete">Alle Schritte bestätigt <Check size={15} /></span>}
         </div>
       </div>
 
@@ -428,14 +393,14 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 </label>
                 <span className="text-[10px] text-cyan-400 font-mono flex items-center gap-1">
                   <Quote className="w-3 h-3" />
-                  <span>Klickbar zur Traceability</span>
+                  <span>Quelle zum Schritt</span>
                 </span>
               </div>
 
               <div className="dt-source-copy p-3 rounded-xl text-slate-300 space-y-2.5">
                 {/* Check if raw request matches selected node quote */}
                 <div
-                  className={`p-2.5 rounded-lg border transition-all ${
+                  className={`dt-source-quote p-2.5 rounded-lg border transition-all ${
                     selectedNode?.sourceQuote && request.rawRequest.includes(selectedNode.sourceQuote.slice(0, 20))
                       ? 'bg-cyan-950/40 border-cyan-400/60 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
                       : 'border-slate-800/80 bg-[#070B13]/60 text-slate-300'
@@ -469,20 +434,10 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 <button
                   type="button"
                   onClick={handleDeriveArchitecture}
-                  disabled={isDerivingArchitecture}
-                  className="w-full py-2.5 px-4 rounded-full text-xs font-mono font-bold bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-[#070B13] flex items-center justify-center gap-2 border border-cyan-300/60 shadow-[0_0_24px_rgba(6,182,212,0.35)] transition-all cursor-pointer group hover:scale-[1.01] active:scale-[0.99]"
+                  className="dt-derive-button"
                 >
-                  {isDerivingArchitecture ? (
-                    <>
-                      <Sparkles className="w-4 h-4 animate-spin text-[#070B13]" />
-                      <span>Knoten-Architektur wird abgeleitet...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-[#070B13] group-hover:scale-110 transition-transform" />
-                      <span>Knoten-Architektur aus Gesuch ableiten</span>
-                    </>
-                  )}
+                  <Sparkles size={16} aria-hidden="true" />
+                  <span>Prozess aus Kundenwunsch ableiten</span>
                 </button>
 
                 <button
@@ -495,7 +450,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 </button>
 
                 {derivationFeedback && (
-                  <div className="p-2.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 text-[11px] font-mono text-emerald-200 flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                  <div role="status" className="p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-[11px] font-mono text-emerald-200 flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span className="leading-tight">{derivationFeedback}</span>
                   </div>
@@ -654,56 +609,21 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                 )}
               </div>
 
-              {/* Status Switcher Pills (Interactive) */}
-              <div className="space-y-1">
-                <label className="text-[10px] font-mono text-slate-400 uppercase tracking-wider block">
-                  Status festlegen:
-                </label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleStatusChange(selectedNode.id, 'CONFIRMED')}
-                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-mono border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                      selectedNode.status === 'CONFIRMED'
-                        ? 'bg-emerald-500/25 text-emerald-200 border-emerald-400/60 font-bold shadow-[0_0_12px_rgba(16,185,129,0.3)]'
-                        : 'bg-[#05080F] text-slate-400 border-slate-800 hover:text-emerald-300 hover:border-emerald-500/40'
-                    }`}
-                  >
-                    <span>✓</span> CONFIRMED
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleStatusChange(selectedNode.id, 'INFERRED')}
-                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-mono border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                      selectedNode.status === 'INFERRED'
-                        ? 'bg-cyan-500/25 text-cyan-200 border-cyan-400/60 font-bold shadow-[0_0_12px_rgba(6,182,212,0.35)]'
-                        : 'bg-[#05080F] text-slate-400 border-slate-800 hover:text-cyan-300 hover:border-cyan-500/40'
-                    }`}
-                  >
-                    <span>⚡</span> INFERRED
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleStatusChange(selectedNode.id, 'UNCLEAR')}
-                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-mono border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                      selectedNode.status === 'UNCLEAR'
-                        ? 'bg-amber-500/25 text-amber-200 border-amber-400/60 font-bold shadow-[0_0_12px_rgba(245,158,11,0.3)]'
-                        : 'bg-[#05080F] text-slate-400 border-slate-800 hover:text-amber-300 hover:border-amber-500/40'
-                    }`}
-                  >
-                    <span>⚠️</span> UNCLEAR
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleStatusChange(selectedNode.id, 'QUESTION')}
-                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-mono border transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                      selectedNode.status === 'QUESTION'
-                        ? 'bg-rose-500/25 text-rose-200 border-rose-400/60 font-bold shadow-[0_0_12px_rgba(244,63,94,0.35)]'
-                        : 'bg-[#05080F] text-slate-400 border-slate-800 hover:text-rose-300 hover:border-rose-500/40'
-                    }`}
-                  >
-                    <span>❓</span> QUESTION
-                  </button>
+              <div className="space-y-2">
+                <span className="dt-inspector-label">Klärungsstand festlegen</span>
+                <div className="dt-inspector-statuses" role="group" aria-label="Status des ausgewählten Schritts">
+                  {([
+                    ['CONFIRMED', 'Bestätigt', CheckCircle2],
+                    ['INFERRED', 'Abgeleitet', Cpu],
+                    ['UNCLEAR', 'Unklar', AlertTriangle],
+                    ['QUESTION', 'Frage', HelpCircle]
+                  ] as const).map(([value, label, Icon]) => (
+                    <button key={value} type="button" className="dt-inspector-status" data-status={value}
+                      aria-pressed={selectedNode.status === value}
+                      onClick={() => handleStatusChange(selectedNode.id, value)}>
+                      <Icon size={14} aria-hidden="true" />{label}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -844,7 +764,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-emerald-950"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>Bestätigen (CONFIRMED)</span>
+                    <span>Schritt bestätigen</span>
                   </button>
 
                   <button
@@ -853,7 +773,7 @@ export const LivingProcessMapView: React.FC<LivingProcessMapViewProps> = ({
                     className="w-full py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/50 rounded-lg text-xs font-mono font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
-                    <span>Frage an Kunde erzeugen</span>
+                    <span>Rückfrage formulieren</span>
                   </button>
 
                   <div className="flex gap-2">
