@@ -1,5 +1,38 @@
 # Kompakte Workstation-Navigation
 
+## Wiederherstellung der ursprünglichen Bewegung und Oberflächen – 21.10.2026
+
+Die neuen Referenzbilder konkretisieren die gewünschte Übernahme aus `Berufsgruppen-DigitalTwinArchitecs.io` (weiterhin Quelle `653706a05f92420681043fc160eea6314f6cf025`). Übernommen werden die tatsächlichen Bewegungseigenschaften und Oberflächen, nicht nur statische Nachbildungen.
+
+| Referenz | Umsetzung |
+| --- | --- |
+| Bild 1 | Die gerundete Digital-Twin-Konsole ist mit Rahmenverlauf, Statuspunkten, zwei einlaufenden Balken, acht Diagrammbalken und Logzeile wieder vorhanden. `+70 %` und `99.99 %` bleiben ausdrücklich Demo-/Beispielwerte. |
+| Bild 2 | Das Spinnendiagramm leuchtet beim Erkunden auf; Achse und Punkte werden hervorgehoben. Die Mausvorschau folgt dem Zeiger innerhalb des Diagramms. Tastatur und Touch behalten ihre eigenen zugänglichen Einstiege. Die bestätigten Eisblau-/Sandfarben bleiben. |
+| Bild 3 | Die ursprüngliche Kombination aus dunklem, grün/blau schimmerndem Potenzial-Check-Button und plastischem Silberbutton ist wieder da: Anheben, Lichtreflex, Pfeilbewegung und Druckzustand. |
+| Bild 4 | Die umrundeten Häkchen mit Füllung, Halo und Hover-Beleuchtung kommen zurück; die Akzente sind Grau/Weiß im bestehenden Farbschema. Die zuletzt konkretisierten verlinkten Aussagen bleiben erhalten. |
+| Bild 5 | Die große Überschrift „Finden Sie Ihre Passende KI-Lösung“ verwendet wieder mehrlagigen Glanz, Relief, Halo und wandernde Reflexe; Silber/Steel Blue ersetzt Grün. |
+| Bild 6 | Beide gegenläufigen Kachelreihen sind wieder da, mit allen 20 ursprünglichen Berufsgruppen und ihren 60 Beispielideen auf Deutsch/Russisch. Die 80-/90-Sekunden-Schleifen, Glasreflexe, Schweben, Neigung und Druckzustände sind übernommen. |
+| Bilder 7–8 | Die weiße Navigationsmarkierung verwendet wieder die Federbewegung. Nach einem Klick aus einer gescrollten Ansicht fliegt sie gezielt von unten in den ausgewählten Tab. Die Flugkoordinaten sind an den Viewport gebunden, damit die gewünschte Bewegung keine zufällige Scroll-Abweichung erzeugt. |
+| Bild 9 | Die Sprachwahl ist wieder eine weiße 32-Pixel-Kreisscheibe mit dunkler Beschriftung, ursprünglichem Schatten und Farbwechsel bei Hover. Die unsichtbaren Klickflächen bleiben 44 Pixel groß. |
+| Ergänzung Partikel | Ein transparentes weißes Sternenfeld rotiert langsam und reagiert auf den Mauszeiger; es liegt zusätzlich über dem bisherigen Marmorbild. Es enthält keine deckende Ersatzfläche. |
+| Ergänzung Kopfzeile | Beim Scrollen wird die Kopfzeile transparenter; Milchglas und darunterliegender Inhalt bleiben erkennbar. |
+
+Die öffentliche Navigation hat wieder die sechs direkten Einstiege **Start, KI-Beratung, Automatisierung, Chatbot, Preise, FAQ**. Leistungs-, Preis- und FAQ-Inhalte wechseln als eigene einfliegende Ansichten. Der laufende Potenzial-Check bleibt außerhalb des wechselnden Panels montiert, sodass Antworten beim Tabwechsel erhalten bleiben. `#/loesungen`, `#/ablauf` und `#/kontakt` bleiben Abschnittsziele auf der Startseite; `#/chatbot` wird zusätzlich als Alias für `#/chatbots` erkannt. Produktdemo und Workstation bleiben über ihre vorhandenen Einstiege und Direktadressen erreichbar. Die vier internen Workstation-Bereiche ändern sich dadurch nicht.
+
+Ein Klick auf eine Branchen-Kachel öffnet wieder ein animiertes Ideenfenster. Dessen Kontaktaktion übernimmt die gewählte Branche in den vorhandenen Potenzial-Check. Das sind mögliche Ansätze, keine bereits eingerichteten Kundenintegrationen. Escape, Fokus-Rückgabe und eine pausierbare, per Tastatur bedienbare Darstellung der Kachelreihen sind berücksichtigt. Reduzierte Bewegung stoppt die Endlosschleifen und das Sternenfeld; reduzierte Transparenz erhält eine deckende Kopfzeile.
+
+Die Animationen verwenden die bereits vorhandene `motion`-Abhängigkeit. Das transparente Sternenfeld zeichnet dieselbe Art langsamer Raumrotation/Parallaxe direkt in Canvas; zusätzliche Three.js-Abhängigkeiten und der deckende alte Hintergrund sind dafür nicht erforderlich. Bei ausgeblendeter Seite wird die Zeichenschleife pausiert. Die Änderungen sind auf die öffentliche Oberfläche begrenzt.
+
+Der Quellvergleich bestätigt alle 20 Originalbeschriftungen und alle 60 Beispielideen in beiden Sprachen. Die gezielte Browserprüfung und ihre Grenzen werden im aktuellen [Motion-Prüfbericht](cinematic-motion-verification.json) festgehalten. Die nachfolgenden Prüfstände und Bilder beschreiben jeweils die früheren Umsetzungen.
+
+TypeScript, Produktionsbuild, Diff-Prüfung und Syntaxprüfung des angepassten Browser-Skripts sind bestanden. Die aktuelle Desktopprüfung bestätigt die sechs Tabs, eigenständigen Inhaltsansichten, erhaltenen Check-Antworten, Branchenübergabe, DE/RU-Umschaltung, Diagrammbeleuchtung, Konsole, Kopfzeile sowie die gegenläufigen Kachelreihen.
+
+![Wiederhergestellter Einstieg mit Glasbuttons und Diagramm](cinematic-motion-home.jpg)
+
+![Digital-Twin-Konsole über Marmor und Sternenfeld](cinematic-motion-console.jpg)
+
+![Beide Kachelreihen und die silberne Glanzüberschrift](cinematic-motion-ticker.jpg)
+
 ## Korrektur: Diagramm, Kontaktbuttons und konkrete Einstiegslinks – 21.10.2026
 
 Das Diagramm behält auf ausdrücklichen Nutzerwunsch die Eisblau-/Sandfarben aus PR #6. Wiederhergestellt sind der animierte Aufbau beider Kurven, Hervorhebung beim Erkunden, ein Vergleich mit beiden Prozentwerten beim Überfahren beziehungsweise Tastaturfokus, der direkte Klick auf die Diagrammfläche und animierte Balken in der Bereichsanalyse. Alle zehn ursprünglichen Kategorien und Werte bleiben erhalten; die vollständigen Namen „Recht & Compliance“ und „Gesundheitswesen“ sind wieder sichtbar. Escape schließt auch die Vorschau. Der Anthropic-Link ist als Hintergrund gekennzeichnet, nicht als Quelle der illustrierten Zahlen.

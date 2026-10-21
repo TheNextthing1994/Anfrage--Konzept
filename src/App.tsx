@@ -3,12 +3,14 @@ import { PublicLayout } from './components/public/PublicLayout';
 import { PublicWebsite } from './components/public/PublicWebsite';
 import { useLanguage } from './i18n/LanguageContext';
 import './styles/public-site.css';
+import './styles/public-motion.css';
 
 const ProductDemo = lazy(() => import('./components/LandingPage'));
 const WorkstationApp = lazy(() => import('./components/WorkstationApp'));
 
 function readLocation() {
-  const path = window.location.hash.replace(/^#\/?/, '');
+  const rawPath = window.location.hash.replace(/^#\/?/, '');
+  const path = rawPath === 'chatbot' ? 'chatbots' : rawPath;
   return {
     page: path === 'workstation' ? 'workstation' : path === 'demo' ? 'demo' : 'website',
     section: ['loesungen', 'beratung', 'automatisierung', 'chatbots', 'ablauf', 'preise', 'faq', 'kontakt'].includes(path) ? path : null
@@ -29,7 +31,7 @@ export default function App() {
 
   useEffect(() => {
     if (location.page === 'workstation') setHasOpenedWorkstation(true);
-    const frame = requestAnimationFrame(() => {
+    const position = () => {
       if (location.section) {
         const section = document.getElementById(location.section);
         section?.scrollIntoView({ block: 'start' });
@@ -37,11 +39,14 @@ export default function App() {
       } else {
         window.scrollTo({ top: 0, behavior: 'instant' });
       }
-    });
+    };
+    const frame = requestAnimationFrame(position);
+    const ready = () => { if (location.section) position(); };
+    window.addEventListener('dt-public-page-ready', ready);
     document.title = location.page === 'workstation' ? 'D.T. Workstation'
       : location.page === 'demo' ? (ru ? 'Знакомство с продуктом · D.T.' : 'Produktdemo · D.T.')
       : 'DigitalTwinArchitecs.io · ' + (ru ? 'Автоматизация для вашего бизнеса' : 'Automatisierung für Ihren Betrieb');
-    return () => cancelAnimationFrame(frame);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('dt-public-page-ready', ready); };
   }, [location, ru]);
 
   const loading = <p className="dt-page-loading" role="status">{ru ? 'Загрузка…' : 'Wird geladen…'}</p>;
@@ -64,7 +69,7 @@ export default function App() {
         {location.page !== 'workstation' && (
           <PublicLayout page={location.page === 'demo' ? 'demo' : 'website'} activeSection={location.section}>
             <Suspense fallback={loading}>
-              {location.page === 'demo' ? <ProductDemo /> : <PublicWebsite />}
+              {location.page === 'demo' ? <ProductDemo /> : <PublicWebsite activeSection={location.section} />}
             </Suspense>
           </PublicLayout>
         )}
