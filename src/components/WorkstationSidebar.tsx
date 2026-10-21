@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Globe2, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
+import { BookOpen, Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import type { WorkstationSection } from '../data/workstationData';
 import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
 
@@ -109,12 +109,12 @@ export function WorkstationSidebar({
           <button
             type="button"
             className="dt-sidebar-link"
-            aria-label={t('home')}
-            title={t('home')}
+            aria-label={t('introduction')}
+            title={t('introduction')}
             onClick={onBackToLanding}
           >
-            <span className="dt-sidebar-icon" aria-hidden="true"><Globe2 /></span>
-            <span className="dt-sidebar-label">{t('home')}</span>
+            <span className="dt-sidebar-icon" aria-hidden="true"><BookOpen /></span>
+            <span className="dt-sidebar-label">{t('introduction')}</span>
           </button>
           <button
             type="button"

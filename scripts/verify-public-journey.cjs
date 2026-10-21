@@ -1,0 +1,284 @@
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
+
+(async () => {
+  const dist = path.resolve(__dirname, '../dist');
+  const output = process.env.UI_QA_OUTPUT_DIR || path.resolve(__dirname, '../artifacts/public-journey');
+  fs.mkdirSync(output, { recursive: true });
+  const server = http.createServer((request, response) => {
+    const pathname = new URL(request.url, 'http://localhost').pathname;
+    const filename = path.join(dist, pathname === '/' ? 'index.html' : pathname);
+    if (!filename.startsWith(dist + path.sep) || !fs.existsSync(filename)) { response.writeHead(404).end(); return; }
+    const type = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.png': 'image/png' }[path.extname(filename)] || 'application/octet-stream';
+    response.writeHead(200, { 'Content-Type': type }); response.end(fs.readFileSync(filename));
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const base = 'http://127.0.0.1:' + server.address().port;
+  const options = { headless: true };
+  if (process.env.CHROMIUM_EXECUTABLE) options.executablePath = process.env.CHROMIUM_EXECUTABLE;
+  if (process.env.CHROMIUM_ARGS) options.args = JSON.parse(process.env.CHROMIUM_ARGS);
+  const browser = await chromium.launch(options);
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  const page = await context.newPage();
+  const checks = [], errors = [], requests = [];
+  const screenshot = name => page.screenshot({ path: path.join(output, name + '.png'), fullPage: false, timeout: 30000 });
+  page.setDefaultTimeout(20000);
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('request', request => requests.push(request.url()));
+  const check = message => { checks.push(message); console.log('PASS ' + message); };
+  const noOverflow = async target => assert.equal(await target.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+  try {
+    await page.goto(base, { waitUntil: 'domcontentloaded' });
+    await page.getByRole('heading', { name: 'Wir machen Ihren Betrieb effizienter.', exact: true }).waitFor();
+    assert.equal(await page.locator('.dt-workstation-shell').count(), 0);
+    assert.equal(await page.evaluate(() => localStorage.getItem('dt_client_requests')), null);
+    assert.equal(requests.some(url => /WorkstationApp.*\.js/.test(url)), false);
+    await noOverflow(page);
+    await screenshot('public-home');
+    check('The public entry explains customer value and does not load or initialize workstation data');
+
+    const navigation = page.getByRole('navigation', { name: 'Website-Navigation', exact: true });
+    assert.equal(await navigation.getByRole('link', { name: 'Start', exact: true }).getAttribute('aria-current'), 'page');
+    await navigation.getByRole('button', { name: 'Lösungen', exact: true }).click();
+    await navigation.getByRole('link', { name: 'KI-Beratung', exact: true }).click();
+    await page.waitForURL('**/#/beratung');
+    await page.waitForFunction(() => document.querySelector('.dt-solutions-navigation button')?.getAttribute('data-active') === 'true');
+    assert.equal(await navigation.getByRole('button', { name: 'Lösungen', exact: true }).getAttribute('data-active'), 'true');
+    assert.equal(await page.locator('#beratung').evaluate(element => element === document.activeElement), true);
+    await navigation.getByRole('button', { name: 'Lösungen', exact: true }).click();
+    await page.keyboard.press('Escape');
+    assert.equal(await navigation.getByRole('button', { name: 'Lösungen', exact: true }).getAttribute('aria-expanded'), 'false');
+    assert.equal(await navigation.getByRole('button', { name: 'Lösungen', exact: true }).evaluate(element => element === document.activeElement), true);
+    check('The capsule navigation marks the active destination, reaches real service content and supports Escape with focus return');
+
+    await navigation.getByRole('link', { name: 'Preise', exact: true }).click();
+    await page.waitForFunction(() => document.querySelector('.dt-public-nav a[href="#/preise"]')?.getAttribute('aria-current') === 'location');
+    await page.getByRole('heading', { name: 'Was kostet Ihr Vorhaben?', exact: true }).waitFor();
+    assert.equal(await navigation.getByRole('link', { name: 'Preise', exact: true }).getAttribute('aria-current'), 'location');
+    await navigation.getByRole('link', { name: 'FAQ', exact: true }).click();
+    const question = page.locator('.dt-faq-list summary').first();
+    await question.focus(); await page.keyboard.press('Enter');
+    assert.equal(await page.locator('.dt-faq-list details').first().getAttribute('open'), '');
+    assert.ok((await page.locator('.dt-faq-list details').first().innerText()).includes('konkreten Ablauf'));
+    await page.locator('.dt-faq-list summary').nth(1).click();
+    assert.equal(await page.locator('.dt-faq-list details').first().getAttribute('open'), null);
+    await navigation.getByRole('link', { name: 'Start', exact: true }).click();
+    check('Prices and FAQ have working destinations, readable content and a keyboard-accessible accordion');
+
+    const radar = page.getByRole('group', { name: 'Interaktives Spinnendiagramm', exact: true });
+    assert.equal(await radar.getByRole('button').count(), 10);
+    assert.ok((await page.locator('.dt-radar-caption').innerText()).includes('Beispielwerten'));
+    const management = radar.getByRole('button', { name: 'Management', exact: true });
+    await management.focus(); await page.keyboard.press('Enter');
+    const detail = page.getByRole('region', { name: 'Management', exact: true });
+    assert.ok((await detail.innerText()).includes('85%'));
+    assert.ok((await detail.innerText()).includes('18%'));
+    await page.keyboard.press('Escape');
+    assert.equal(await management.evaluate(element => element === document.activeElement), true);
+    assert.equal(await detail.count(), 0);
+    await radar.getByRole('button', { name: 'Verwaltung', exact: true }).click();
+    await screenshot('public-radar-detail');
+    await page.getByRole('button', { name: 'Bereich schließen', exact: true }).click();
+    check('The ten-axis radar opens category details by keyboard or pointer and clearly identifies its values as examples');
+
+    const contactTrigger = page.getByRole('button', { name: 'Kontakt öffnen', exact: true });
+    await contactTrigger.click();
+    const contactOptions = page.getByRole('group', { name: 'Kontaktmöglichkeiten', exact: true });
+    assert.equal(await contactOptions.getByRole('link', { name: 'WhatsApp', exact: true }).getAttribute('href'), 'https://wa.me/436604763085');
+    assert.equal(await contactOptions.getByRole('link', { name: 'Anrufen', exact: true }).getAttribute('href'), 'tel:+436604763085');
+    const publicEmail = await contactOptions.getByRole('link', { name: 'E-Mail', exact: true }).getAttribute('href');
+    assert.equal(publicEmail, 'mailto:office@digitaltwinarchitecs.io');
+    assert.equal(await page.locator('.dt-contact-details a').first().getAttribute('href'), publicEmail);
+    await screenshot('public-contact-options');
+    await page.keyboard.press('Escape');
+    assert.equal(await contactTrigger.evaluate(element => element === document.activeElement), true);
+    await contactTrigger.click(); await page.locator('#hero-title').click();
+    assert.equal(await contactOptions.count(), 0);
+    check('One contact control opens WhatsApp, telephone and the shared business email; Escape and outside clicks close it');
+
+    const profiles = page.getByRole('navigation', { name: 'Unsere Profile', exact: true });
+    assert.equal(await profiles.getByRole('link').count(), 1);
+    assert.equal(await profiles.getByRole('link', { name: 'GitHub', exact: true }).getAttribute('href'), 'https://github.com/TheNextthing1994');
+    assert.equal(await profiles.locator('a[href="#"]').count(), 0);
+    assert.ok((await page.locator('.dt-contact-details').innerText()).includes('Bregenz, Österreich'));
+    check('The contact block has real contact targets and the footer only renders the known GitHub profile');
+
+    await page.getByRole('button', { name: 'Onlinehandel', exact: true }).click();
+    await page.getByRole('heading', { name: 'Wiederkehrende Fragen schneller klären.', exact: true }).waitFor();
+    await page.getByRole('link', { name: 'Diesen Ablauf besprechen', exact: true }).click();
+    await page.waitForURL('**/#/kontakt');
+    assert.ok(await page.locator('#kontakt').evaluate(element => element.getBoundingClientRect().top >= 75));
+    check('Industry selection changes the content and takes the chosen example into the contact journey');
+
+    const next = page.getByRole('button', { name: 'Weiter', exact: true });
+    assert.equal(await next.isEnabled(), false);
+    await page.getByRole('button', { name: 'Dokumente und Abläufe ordnen', exact: true }).click();
+    await next.click();
+    await page.getByRole('button', { name: '2–10 Personen', exact: true }).click();
+    await page.getByRole('button', { name: 'Zurück', exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: 'Dokumente und Abläufe ordnen', exact: true }).getAttribute('aria-pressed'), 'true');
+    await next.click(); await next.click();
+    await page.getByRole('button', { name: 'Ich möchte mich erst orientieren', exact: true }).click(); await next.click();
+    assert.ok((await page.locator('.dt-selected-example').innerText()).includes('Wiederkehrende Fragen schneller klären.'));
+    await page.getByRole('button', { name: 'Anfrage vorbereiten', exact: true }).click();
+    assert.equal(await page.locator('.dt-mail-draft').count(), 0);
+    check('The potential check requires a choice, preserves corrected answers and validates contact fields');
+
+    await page.getByRole('textbox', { name: 'Ihr Name', exact: true }).fill('Test & Team');
+    await page.getByRole('textbox', { name: 'E-Mail', exact: true }).fill('test@example.invalid');
+    await page.getByRole('textbox', { name: 'Unternehmen (optional)', exact: true }).fill('Demo-Betrieb');
+    await page.getByRole('textbox', { name: 'Was passiert heute, was soll einfacher werden?', exact: true }).fill('Wir suchen jeden Morgen unsere Lieferscheine. Wie können wir das vereinfachen?');
+    await page.getByRole('button', { name: 'Anfrage vorbereiten', exact: true }).click();
+    const mailto = new URL(await page.getByRole('link', { name: 'Im E-Mail-Programm öffnen', exact: true }).getAttribute('href'));
+    assert.equal(mailto.protocol, 'mailto:'); assert.equal(mailto.pathname, 'office@digitaltwinarchitecs.io');
+    const body = mailto.searchParams.get('body');
+    for (const value of ['Test & Team', 'test@example.invalid', '2–10 Personen', 'Dokumente und Abläufe ordnen', 'Wiederkehrende Fragen schneller klären.', 'Lieferscheine']) assert.ok(body.includes(value), value);
+    assert.equal(await page.getByText(/Anfrage (wurde )?gesendet/i).count(), 0);
+    assert.equal(await page.evaluate(() => localStorage.getItem('dt_client_requests')), null);
+    assert.equal(requests.some(url => /generativelanguage|\/api\//.test(url)), false);
+    await screenshot('public-contact');
+    check('A reviewable, correctly encoded email draft contains the request; no sent claim, backend call or internal request is created');
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.locator('.dt-header-contact').click();
+    assert.ok(await page.locator('#kontakt').evaluate(element => element.getBoundingClientRect().top >= 75 && element.getBoundingClientRect().top < 150));
+    check('Repeated section links still scroll below the sticky header');
+
+    await page.locator('.dt-public-nav').getByRole('link', { name: 'Produktdemo', exact: true }).click();
+    await page.getByRole('heading', { name: 'Aus einer Anfrage wird ein klarer Plan.', exact: true }).waitFor();
+    await page.evaluate(() => { localStorage.setItem('dt_client_requests', 'keep-this-request'); localStorage.setItem('dt_initiatives', 'keep-this-project'); });
+    await screenshot('product-demo');
+    await page.getByRole('button', { name: '02 Prozess prüfen', exact: true }).click();
+    await page.getByRole('button', { name: '03 Prüfen', exact: true }).click();
+    assert.ok((await page.locator('.dt-demo-explanation').innerText()).includes('bestätigt die Zuordnung'));
+    check('The introduction explains the sample request and lets visitors inspect responsibilities in the process');
+
+    await page.getByRole('button', { name: '03 Vorschau ansehen', exact: true }).click();
+    await page.getByLabel('Projekt auswählen', { exact: true }).selectOption('west');
+    await page.getByRole('button', { name: 'Zuordnen', exact: true }).click();
+    assert.ok((await page.locator('.dt-demo-document-action').innerText()).includes('Baustelle West'));
+    await page.getByRole('button', { name: 'Ändern', exact: true }).click();
+    await page.getByLabel('Projekt auswählen', { exact: true }).selectOption('north');
+    await page.getByRole('button', { name: 'Zuordnen', exact: true }).click();
+    await screenshot('product-demo-preview');
+    check('The sample preview accepts and corrects a document assignment');
+
+    await page.getByRole('button', { name: '04 Lösung freigeben', exact: true }).click();
+    const approve = page.getByRole('button', { name: 'Freigabe demonstrieren', exact: true });
+    assert.equal(await approve.isEnabled(), false);
+    await page.getByRole('checkbox', { name: 'Ich habe Prozess und Vorschau geprüft.', exact: true }).check();
+    await approve.click();
+    await page.getByRole('heading', { name: 'Demo abgeschlossen.', exact: true }).waitFor();
+    assert.deepEqual(await page.evaluate(() => [localStorage.getItem('dt_client_requests'), localStorage.getItem('dt_initiatives')]), ['keep-this-request', 'keep-this-project']);
+    await page.getByRole('button', { name: 'Neu starten', exact: true }).click();
+    await page.getByRole('button', { name: '03 Vorschau ansehen', exact: true }).click();
+    assert.equal(await page.getByRole('button', { name: 'Zuordnen', exact: true }).count(), 1);
+    check('Demo approval requires acknowledgement, can restart and never changes stored customer work');
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.getByRole('heading', { name: 'Aus einer Anfrage wird ein klarer Plan.', exact: true }).waitFor();
+    await navigation.getByRole('button', { name: 'RU', exact: true }).click();
+    await page.getByRole('heading', { name: 'От обращения — к понятному плану.', exact: true }).waitFor();
+    await page.getByRole('button', { name: '03 Посмотреть прототип', exact: true }).click();
+    await page.getByLabel('Выбрать проект', { exact: true }).selectOption('west');
+    await page.getByRole('button', { name: 'Распределить', exact: true }).click();
+    await page.locator('.dt-public-brand').click();
+    await page.getByRole('heading', { name: 'Помогаем вашему бизнесу работать эффективнее.', exact: true }).waitFor();
+    await page.getByRole('group', { name: 'Интерактивная лепестковая диаграмма', exact: true }).getByRole('button', { name: 'Финансы', exact: true }).click();
+    await page.getByRole('region', { name: 'Финансы', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Закрыть область', exact: true }).click();
+    check('Deep links reload correctly and the public site and interactive demo support Russian');
+
+    await page.locator('.dt-public-nav').getByRole('button', { name: 'DE', exact: true }).click();
+    await page.evaluate(() => { localStorage.removeItem('dt_client_requests'); localStorage.removeItem('dt_initiatives'); });
+    await page.getByRole('link', { name: 'Workstation', exact: true }).click();
+    await page.getByRole('heading', { name: 'Kundenanfragen', exact: true }).waitFor();
+    await page.getByRole('button', { name: 'Anfrage öffnen: Hoffmann Bau GmbH', exact: true }).click();
+    await page.locator('.dt-process-node').first().waitFor();
+    const state = await page.evaluate(() => [localStorage.getItem('dt_client_requests'), localStorage.getItem('dt_initiatives')]);
+    await page.getByRole('button', { name: 'Einführung', exact: true }).click();
+    await page.getByRole('heading', { name: 'Aus einer Anfrage wird ein klarer Plan.', exact: true }).waitFor();
+    assert.equal(await page.locator('.dt-contact-launcher').count(), 0);
+    assert.match(await page.locator('.dt-demo-workspace').evaluate(element => getComputedStyle(element).backgroundImage), /linear-gradient/);
+    check('Loading the workstation stylesheet preserves the public demo glass material');
+    await page.getByRole('link', { name: 'Zur Workstation', exact: true }).click();
+    await page.locator('.dt-process-node').first().waitFor();
+    assert.ok((await page.locator('.dt-workstation-main > header').innerText()).includes('REQ-2026-017'));
+    assert.deepEqual(await page.evaluate(() => [localStorage.getItem('dt_client_requests'), localStorage.getItem('dt_initiatives')]), state);
+    assert.equal(await page.locator('.dt-sidebar-nav').getByRole('button').count(), 4);
+    assert.equal(await page.getByRole('button', { name: /Neue Anfrage/ }).count(), 0);
+    check('The small introduction link preserves the opened customer, saved work and four-area navigation');
+
+    await page.goBack();
+    await page.getByRole('heading', { name: 'Aus einer Anfrage wird ein klarer Plan.', exact: true }).waitFor();
+    await page.goForward();
+    await page.locator('.dt-process-node').first().waitFor();
+    check('Browser back and forward keep the website, demo and workstation destinations consistent');
+
+    const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+    const mobile = await mobileContext.newPage();
+    mobile.on('pageerror', error => errors.push(error.message));
+    await mobile.goto(base, { waitUntil: 'domcontentloaded' });
+    await mobile.getByRole('heading', { name: 'Wir machen Ihren Betrieb effizienter.', exact: true }).waitFor();
+    await noOverflow(mobile); await mobile.screenshot({ path: path.join(output, 'public-mobile.png'), fullPage: false });
+    const mobileRadar = mobile.getByRole('group', { name: 'Interaktives Spinnendiagramm', exact: true });
+    await mobileRadar.getByRole('button', { name: 'Finanzen', exact: true }).tap();
+    await mobile.getByRole('region', { name: 'Finanzen', exact: true }).waitFor();
+    await mobile.getByRole('button', { name: 'Bereich schließen', exact: true }).tap();
+    const radarTargets = await mobile.locator('.dt-radar-label').evaluateAll(elements => elements.map(element => {
+      const box = element.getBoundingClientRect(); return { x: box.x, right: box.right, height: box.height, width: box.width };
+    }));
+    assert.ok(radarTargets.every(box => box.x >= 0 && box.right <= 390 && box.height >= 44 && box.width >= 44));
+    await mobile.locator('.dt-radar').screenshot({ path: path.join(output, 'public-radar-mobile.png') });
+    check('The radar supports touch input and all category targets stay within the 390px viewport at 44px or larger');
+    await mobile.getByRole('button', { name: 'Menü öffnen', exact: true }).click();
+    const menu = mobile.getByRole('navigation', { name: 'Website-Navigation', exact: true });
+    assert.equal(await menu.isVisible(), true);
+    await mobile.keyboard.press('Escape');
+    assert.equal(await menu.isVisible(), false);
+    assert.equal(await mobile.getByRole('button', { name: 'Menü öffnen', exact: true }).evaluate(element => element === document.activeElement), true);
+    await mobile.getByRole('button', { name: 'Menü öffnen', exact: true }).tap();
+    await menu.getByRole('button', { name: 'Lösungen', exact: true }).tap();
+    await menu.getByRole('link', { name: 'Chatbots & Wissenszugang', exact: true }).tap();
+    await mobile.waitForURL('**/#/chatbots');
+    assert.equal(await menu.isVisible(), false);
+    check('The mobile solutions menu opens a service section and then frees the page again');
+    await mobile.getByRole('button', { name: 'Menü öffnen', exact: true }).click();
+    await menu.getByRole('link', { name: 'Produktdemo', exact: true }).click();
+    await mobile.getByRole('heading', { name: 'Aus einer Anfrage wird ein klarer Plan.', exact: true }).waitFor();
+    assert.equal(await menu.isVisible(), false); await noOverflow(mobile);
+    await mobile.getByRole('button', { name: '03 Vorschau ansehen', exact: true }).click();
+    await noOverflow(mobile);
+    await mobile.screenshot({ path: path.join(output, 'product-demo-mobile.png'), fullPage: false });
+    const targets = await mobile.locator('.dt-demo-stepper button,.dt-public-menu-button').evaluateAll(elements => elements.map(element => element.getBoundingClientRect().height));
+    assert.ok(targets.every(height => height >= 44));
+    check('At 390px the site and demo fit, touch targets fit and the menu closes with selection or Escape');
+
+    await mobile.setViewportSize({ width: 320, height: 760 });
+    await noOverflow(mobile);
+    await mobile.goto(base, { waitUntil: 'domcontentloaded' }); await mobile.locator('#hero-title').waitFor(); await noOverflow(mobile);
+    const smallestRadar = await mobile.locator('.dt-radar-label').evaluateAll(elements => elements.map(element => { const box = element.getBoundingClientRect(); return { x: box.x, right: box.right }; }));
+    assert.ok(smallestRadar.every(box => box.x >= 0 && box.right <= 320));
+    check('The entry and demo preview also fit a 320px viewport');
+    await mobile.close();
+
+    await page.goto(base + '/#/demo', { waitUntil: 'domcontentloaded' });
+    await page.locator('.dt-demo-workspace').waitFor();
+    await page.emulateMedia({ reducedMotion: 'reduce', contrast: 'more' });
+    assert.equal(await page.locator('.dt-button').first().evaluate(element => getComputedStyle(element).transitionDuration), '0s');
+    await noOverflow(page);
+    check('Reduced motion and increased contrast remain usable in the public introduction');
+    assert.deepEqual(errors, []);
+    const report = { passed: checks.length, checks, runtimeErrors: errors, browser: browser.version(), viewports: ['1440x1000', '390x844', '320x760'], timestamp: new Date().toISOString() };
+    fs.writeFileSync(path.join(output, 'public-journey-qa.json'), JSON.stringify(report, null, 2));
+    console.log(JSON.stringify(report, null, 2));
+  } catch (error) {
+    console.error(JSON.stringify({ passedBeforeFailure: checks.length, checks })); console.error(error);
+    await screenshot('public-failure').catch(() => {}); process.exitCode = 1;
+  } finally {
+    await browser.close(); await new Promise(resolve => server.close(resolve));
+  }
+})().catch(error => { console.error(error); process.exit(1); });

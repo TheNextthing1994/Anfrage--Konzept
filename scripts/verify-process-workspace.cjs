@@ -19,7 +19,7 @@ const path = require('node:path');
     response.writeHead(200, {'Content-Type':type}); response.end(fs.readFileSync(filename));
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  const base = 'http://127.0.0.1:' + server.address().port;
+  const base = 'http://127.0.0.1:' + server.address().port + '/#/workstation';
   const browser = await chromium.launch(launchOptions);
   const page = await browser.newPage({viewport:{width:1920,height:1080},deviceScaleFactor:1});
   // Software-rendered screenshots can take longer than interaction checks.
@@ -151,13 +151,17 @@ const path = require('node:path');
     assert.equal(await page.locator('.react-flow__node[data-id="NODE-BG-01"]').count(),1);
     checks.push('Build and return to the process map keep the linked customer request instead of the first project');
 
-    await sidebar.getByRole('button',{name:'Homepage',exact:true}).click();
-    assert.equal(await page.locator('.dt-workstation-shell').count(),0);
-    await page.getByRole('button',{name:'Kostprobe starten',exact:true}).first().click();
+    await sidebar.getByRole('button',{name:'Einführung',exact:true}).click();
+    await page.getByRole('heading',{name:'Aus einer Anfrage wird ein klarer Plan.',exact:true}).waitFor();
+    assert.equal(await page.locator('.dt-workstation-shell').isVisible(),false);
+    await page.getByRole('link',{name:'Zur Workstation',exact:true}).click();
+    await page.locator('.dt-workstation-shell').waitFor();
+    assert.equal(await page.locator('.react-flow__node[data-id="NODE-BG-01"]').count(),1,'Returning from the introduction retains the selected customer');
+    await areaNav.getByRole('button',{name:'Anfragen',exact:true}).click();
     await openReference();
     await page.locator('.dt-process-node').first().waitFor(); await settle();
     assert.equal((await sidebar.boundingBox()).width,64);
-    checks.push('Homepage and return to the workstation remain available without the removed view-mode toolbar');
+    checks.push('The introduction uses its own demo and returning retains the selected customer and compact navigation');
 
     await node('NODE-02').locator('.dt-node-title').click();
     await settle();
@@ -233,7 +237,7 @@ const path = require('node:path');
 
     for(const size of [{width:1440,height:900},{width:390,height:844}]){
       await page.setViewportSize(size);
-      await page.goto(base,{waitUntil:'domcontentloaded'});
+      await page.reload({waitUntil:'domcontentloaded'});
       await openReference();
       await page.locator('.dt-process-node').first().waitFor(); await settle();
       assert.ok(await zoom()>=0.8);
@@ -241,7 +245,7 @@ const path = require('node:path');
       checks.push('Responsive viewport '+size.width+'x'+size.height);
     }
     await page.setViewportSize({width:1920,height:1080});
-    await page.goto(base,{waitUntil:'domcontentloaded'});
+    await page.reload({waitUntil:'domcontentloaded'});
     await openReference();
     await page.locator('.dt-process-node').first().waitFor(); await settle();
     await page.screenshot({path:path.join(outputDir,'apple-design-after.png'),fullPage:false});

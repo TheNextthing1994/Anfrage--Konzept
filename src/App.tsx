@@ -1,59 +1,50 @@
-import React, { useState } from 'react';
-import {
-  INITIAL_OBJECTS,
-  StandardizedObject,
-  WorkstationSection,
-  ObjectState
-} from './data/workstationData';
-import { LandingPage } from './components/LandingPage';
-import { WorkstationView } from './components/WorkstationView';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { PublicLayout } from './components/public/PublicLayout';
+import { PublicWebsite } from './components/public/PublicWebsite';
+import { useLanguage } from './i18n/LanguageContext';
+import './styles/public-site.css';
+
+const ProductDemo = lazy(() => import('./components/LandingPage'));
+const WorkstationApp = lazy(() => import('./components/WorkstationApp'));
+
+function readLocation() {
+  const path = window.location.hash.replace(/^#\/?/, '');
+  return {
+    page: path === 'workstation' ? 'workstation' : path === 'demo' ? 'demo' : 'website',
+    section: ['loesungen', 'beratung', 'automatisierung', 'chatbots', 'ablauf', 'preise', 'faq', 'kontakt'].includes(path) ? path : null
+  };
+}
 
 export default function App() {
-  // Default to Workstation so user immediately sees the UX from the screenshots
-  const [viewMode, setViewMode] = useState<'landing' | 'workstation'>('workstation');
-  const [objects, setObjects] = useState<StandardizedObject[]>(INITIAL_OBJECTS);
-  const [activeSection, setActiveSection] = useState<WorkstationSection>('requests');
-  const [selectedObjectId, setSelectedObjectId] = useState<string>('OBJ-15K-01');
-  const [openIntakeDirectly, setOpenIntakeDirectly] = useState<boolean>(false);
+  const [location, setLocation] = useState(readLocation);
+  const [hasOpenedWorkstation, setHasOpenedWorkstation] = useState(() => readLocation().page === 'workstation');
+  const { language } = useLanguage();
+  const ru = language === 'ru';
 
-  const handleOpenWorkstation = (
-    initialSection: WorkstationSection = 'requests',
-    selectObjectId?: string,
-    openIntake: boolean = false
-  ) => {
-    // Older landing-page links still resolve into the current task areas.
-    setActiveSection(initialSection === 'overview' || initialSection === 'settings'
-      ? 'requests'
-      : initialSection === 'inbox' ? 'review' : initialSection);
-    if (selectObjectId) {
-      setSelectedObjectId(selectObjectId);
-    }
-    setOpenIntakeDirectly(openIntake);
-    setViewMode('workstation');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  useEffect(() => {
+    const update = () => setLocation(readLocation());
+    window.addEventListener('hashchange', update);
+    return () => window.removeEventListener('hashchange', update);
+  }, []);
 
-  const handleUpdateObjectState = (
-    id: string,
-    newState: ObjectState,
-    newSection?: StandardizedObject['section']
-  ) => {
-    setObjects((prev) =>
-      prev.map((obj) => {
-        if (obj.id !== id) return obj;
-        return {
-          ...obj,
-          currentState: newState,
-          section: newSection || obj.section,
-          lastReviewed: '2026-10-03'
-        };
-      })
-    );
-  };
+  useEffect(() => {
+    if (location.page === 'workstation') setHasOpenedWorkstation(true);
+    const frame = requestAnimationFrame(() => {
+      if (location.section) {
+        const section = document.getElementById(location.section);
+        section?.scrollIntoView({ block: 'start' });
+        section?.focus({ preventScroll: true });
+      } else {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+    });
+    document.title = location.page === 'workstation' ? 'D.T. Workstation'
+      : location.page === 'demo' ? (ru ? 'Знакомство с продуктом · D.T.' : 'Produktdemo · D.T.')
+      : 'DigitalTwinArchitecs.io · ' + (ru ? 'Автоматизация для вашего бизнеса' : 'Automatisierung für Ihren Betrieb');
+    return () => cancelAnimationFrame(frame);
+  }, [location, ru]);
 
-  const handleAddObject = (newObj: StandardizedObject) => {
-    setObjects((prev) => [newObj, ...prev]);
-  };
+  const loading = <p className="dt-page-loading" role="status">{ru ? 'Загрузка…' : 'Wird geladen…'}</p>;
 
   return (
     <div 
@@ -65,26 +56,17 @@ export default function App() {
       
       {/* BODY VIEW */}
       <div className="flex-1 min-h-0 flex flex-col relative z-10">
-        {viewMode === 'landing' ? (
-          <LandingPage
-            objects={objects}
-            onOpenWorkstation={handleOpenWorkstation}
-          />
-        ) : (
-          <WorkstationView
-            objects={objects}
-            activeSection={activeSection}
-            onSectionChange={setActiveSection}
-            selectedObjectId={selectedObjectId}
-            onSelectObject={setSelectedObjectId}
-            onUpdateObjectState={handleUpdateObjectState}
-            onAddObject={handleAddObject}
-            onBackToLanding={() => {
-              setViewMode('landing');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            initialOpenIntake={openIntakeDirectly}
-          />
+        {(hasOpenedWorkstation || location.page === 'workstation') && (
+          <div className={location.page === 'workstation' ? 'flex-1 min-h-0 flex flex-col' : 'hidden'}>
+            <Suspense fallback={loading}><WorkstationApp /></Suspense>
+          </div>
+        )}
+        {location.page !== 'workstation' && (
+          <PublicLayout page={location.page === 'demo' ? 'demo' : 'website'} activeSection={location.section}>
+            <Suspense fallback={loading}>
+              {location.page === 'demo' ? <ProductDemo /> : <PublicWebsite />}
+            </Suspense>
+          </PublicLayout>
         )}
       </div>
     </div>
