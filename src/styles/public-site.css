@@ -65,6 +65,8 @@
 .dt-hero-description { color: var(--dt-muted); font-size: 16px; line-height: 1.9; margin-block: 28px 32px; max-width: 490px; }
 .dt-hero-promises { display: flex; flex-wrap: wrap; gap: 12px 22px; margin-top: 30px; color: #afc0d6; font-size: 10px; }
 .dt-hero-promises li { display: flex; align-items: center; gap: 7px; }
+.dt-hero-promises a { display: flex; align-items: center; gap: 7px; }
+.dt-hero-promises a:hover { color: #f4f8ff; text-decoration: underline; text-underline-offset: 4px; }
 .dt-hero-promises svg { width: 13px; height: 13px; color: #c4d9f2; }
 .dt-public .dt-glass { background: linear-gradient(140deg, rgba(72, 92, 119, .44), rgba(24, 39, 59, .72) 55%, rgba(24, 39, 59, .6)); border: 1px solid rgba(211, 231, 254, .23); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: inset 0 1px rgba(255,255,255,.14), 0 26px 80px rgba(0,0,0,.22); }
 .dt-hero-visual { position: relative; }
@@ -75,30 +77,54 @@
 .dt-radar-heading h2 { font-size: 25px; }
 .dt-radar-heading > p:last-child { font-size: 11px; color: #a9c1de; margin-top: 9px; }
 .dt-radar-stage { position: relative; aspect-ratio: 600 / 560; }
-.dt-radar-stage > svg { width: 100%; height: 100%; display: block; overflow: visible; }
-.dt-radar-grid { fill: none; stroke: rgba(176, 205, 239, .19); stroke-width: 1; }
-.dt-radar-axis { stroke: rgba(176, 205, 239, .14); stroke-width: 1; }
-.dt-radar-potential { stroke: #adcdf3; stroke-width: 2; filter: drop-shadow(0 0 12px rgba(155, 195, 245, .18)); }
-.dt-radar-usage { stroke: #d3b294; stroke-width: 2; }
-.dt-radar-point { fill: #d4e8ff; }
+.dt-radar-stage > svg { width: 100%; height: 100%; display: block; overflow: visible; cursor: pointer; }
+.dt-radar-grid { fill: none; stroke: rgba(176, 205, 239, .19); stroke-width: 1; stroke-dasharray: 3 3; }
+.dt-radar-axis { stroke: rgba(176, 205, 239, .14); stroke-width: 1; transition: stroke .2s; }
+.dt-radar-axis-active { stroke: rgba(187, 215, 250, .8); stroke-width: 2; }
+.dt-radar-potential, .dt-radar-usage { transform-origin: 300px 280px; animation: dt-radar-reveal 1.5s cubic-bezier(.2,.8,.2,1) both; }
+.dt-radar-stage:is(:hover, :focus-within) .dt-radar-potential { filter: drop-shadow(0 0 18px rgba(155, 195, 245, .3)); }
+.dt-radar-potential { stroke: #adcdf3; stroke-width: 2; filter: drop-shadow(0 0 12px rgba(155, 195, 245, .2)); }
+.dt-radar-usage { stroke: #d3b294; stroke-width: 3; animation-delay: .45s; }
+.dt-radar-point { fill: #d4e8ff; transition: r .2s; }
+.dt-radar-point-usage { fill: #dfc4aa; }
 .dt-radar-label { position: absolute; transform: translate(-50%, -50%); min-height: 44px; width: 96px; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 12px; border: 1px solid transparent; font-size: 10px; color: #b9cce6; text-align: center; line-height: 1.45; overflow-wrap: anywhere; }
 .dt-radar-label:hover, .dt-radar-label[aria-expanded="true"] { color: #f4f8ff; background: rgba(170, 202, 241, .13); border-color: rgba(187, 215, 250, .25); }
 .dt-public .dt-radar-detail { position: absolute; bottom: 6%; left: 4%; right: 4%; z-index: 6; padding: 22px; border-radius: 18px; background: rgba(23, 40, 63, .98); }
 .dt-radar-detail-top { display: flex; align-items: center; gap: 10px; margin-bottom: 11px; }
 .dt-radar-detail-top > svg { color: #b5d2f3; width: 18px; height: 18px; }
 .dt-radar-detail-top h3 { font-size: 18px; }
+.dt-radar-detail-top > div > p { margin-top: 5px; color: #9fb6d3; font-size: 9px; text-transform: uppercase; letter-spacing: .14em; }
 .dt-radar-detail-top button { display: grid; place-items: center; width: 44px; height: 44px; margin-left: auto; border-radius: 50%; border: 1px solid var(--dt-line); flex-shrink: 0; }
 .dt-radar-detail-top button svg { width: 17px; height: 17px; }
 .dt-radar-detail > p { color: #c1d2e9; font-size: 12px; line-height: 1.8; }
 .dt-radar-values { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 18px; }
 .dt-radar-values dt { color: #bed2ec; font-size: 10px; }
-.dt-radar-values dd { color: #d7e9ff; font-size: 22px; margin-top: 5px; }
+.dt-radar-values dd { color: #d4e8ff; font-size: 24px; margin-top: 7px; display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; }
 .dt-radar-values > div + div dd { color: #dfc4aa; }
+.dt-radar-meter { flex: 1; height: 6px; overflow: hidden; background: rgba(176, 205, 239, .13); border-radius: 6px; }
+.dt-radar-meter i { height: 100%; display: block; width: 100%; border-radius: inherit; background: currentColor; transform: scaleX(var(--dt-radar-value)); transform-origin: left; animation: dt-radar-meter-in .8s ease-out both; }
+.dt-public .dt-radar-detail { animation: dt-radar-detail-in .22s ease-out; }
+.dt-radar-tooltip { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); width: 228px; max-width: calc(100% - 16px); padding: 17px; border-radius: 15px; border: 1px solid rgba(187, 215, 250, .25); background: rgba(12, 26, 42, .96); backdrop-filter: blur(24px); box-shadow: 0 14px 36px rgba(0,0,0,.35); pointer-events: none; z-index: 5; }
+.dt-radar-tooltip-bottom { top: auto; bottom: 6%; }
+.dt-radar-tooltip > strong { display: block; font-size: 13px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--dt-line); }
+.dt-radar-tooltip dl { display: grid; gap: 8px; }
+.dt-radar-tooltip dl > div { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; }
+.dt-radar-tooltip dt { color: #b4c7df; }
+.dt-radar-tooltip dd { color: #d4e8ff; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.dt-radar-tooltip dl > div + div dd { color: #dfc4aa; }
+.dt-radar-tooltip > span { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 13px; padding-top: 10px; border-top: 1px solid var(--dt-line); color: #a5bcd8; font-size: 9px; }
+.dt-radar-tooltip > span svg { width: 13px; height: 13px; color: #d4e8ff; flex-shrink: 0; }
 .dt-radar-detail .dt-text-link { font-size: 11px; margin-top: 12px; }
 .dt-radar-legend { display: flex; justify-content: center; gap: 30px; color: #bdd2ed; font-size: 10px; margin-top: -10px; }
 .dt-radar-legend > span { display: flex; align-items: center; gap: 8px; }
 .dt-radar-legend i { width: 17px; height: 3px; border-radius: 5px; background: #adcdf3; }
 .dt-radar-legend > span + span i { background: #d3b294; }
+.dt-radar-source { display: flex; align-items: center; justify-content: center; gap: 7px; width: fit-content; max-width: 100%; margin: 17px auto 0; padding: 8px 11px; border: 1px solid rgba(187, 215, 250, .28); border-radius: 8px; color: #b6ccdf; background: rgba(12, 26, 42, .65); font-size: 9px; }
+.dt-radar-source:hover { color: #e1efff; border-color: #d4e8ff; }
+.dt-radar-source svg { width: 12px; height: 12px; flex-shrink: 0; }
+@keyframes dt-radar-reveal { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes dt-radar-meter-in { from { transform: scaleX(0); } to { transform: scaleX(var(--dt-radar-value)); } }
+@keyframes dt-radar-detail-in { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
 .dt-radar-caption { text-align: center; max-width: 420px; margin: 18px auto 0; font-size: 10px; }
 .dt-public-section { padding-block: 92px; }
 .dt-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 54px; margin-bottom: 36px; }
@@ -141,16 +167,18 @@
 .dt-contact-details > a:hover { color: #f4f8ff; text-decoration: underline; text-underline-offset: 4px; }
 .dt-contact-details > :is(a, p) > span { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid rgba(190, 215, 246, .13); background: rgba(166, 197, 237, .06); flex-shrink: 0; }
 .dt-contact-details svg { width: 17px; height: 17px; color: #b2cdeb; }
-.dt-contact-launcher { position: fixed; bottom: calc(22px + env(safe-area-inset-bottom)); right: 24px; z-index: 42; display: flex; align-items: end; flex-direction: column; gap: 14px; }
-.dt-contact-launcher-trigger { display: flex; align-items: center; gap: 11px; min-height: 54px; padding: 13px 22px; border-radius: 100px; color: #0e2139; background: linear-gradient(160deg, #f2f8ff, #bad1ec 55%, #8ba8cb); border: 1px solid #cde3ff; box-shadow: inset 0 2px 3px rgba(255,255,255,.75), inset 0 -3px 7px rgba(26,55,90,.18), 0 9px 26px rgba(0,0,0,.4); font-size: 12px; font-weight: 700; }
-.dt-contact-launcher-trigger svg { width: 21px; height: 21px; }
-.dt-public .dt-contact-launcher-options { width: min(290px, calc(100vw - 36px)); padding: 20px; border-radius: 22px; background: rgba(22, 38, 60, .98); }
-.dt-contact-launcher-options > p { color: #bcd0e9; font-size: 11px; line-height: 1.8; margin-bottom: 15px; }
-.dt-contact-action { display: flex; align-items: center; gap: 13px; min-height: 48px; padding: 10px 16px; border-radius: 100px; border: 1px solid rgba(198, 222, 252, .28); background: linear-gradient(160deg, #637d9e, #304963); box-shadow: inset 0 2px rgba(233,243,255,.2), inset 0 -2px rgba(0,0,0,.17); color: #edf6ff; font-size: 12px; font-weight: 600; }
-.dt-contact-action + .dt-contact-action { margin-top: 10px; }
-.dt-contact-action svg { width: 18px; height: 18px; }
-.dt-contact-action-whatsapp { background: linear-gradient(160deg, #1b936f, #116548); border-color: #4fa88d; }
-.dt-contact-action:hover { border-color: #d3e8ff; }
+.dt-contact-launcher { position: fixed; bottom: calc(32px + env(safe-area-inset-bottom)); right: 16px; z-index: 42; display: flex; align-items: end; flex-direction: column; gap: 16px; pointer-events: none; }
+.dt-contact-orb { --dt-orb-glow: rgba(71,85,105,.3); display: flex; align-items: center; justify-content: end; min-width: 56px; height: 56px; border-radius: 100px; color: white; background: linear-gradient(to bottom, #64748b, #334155); box-shadow: 0 10px 30px var(--dt-orb-glow), inset 0 4px 8px rgba(255,255,255,.3), inset 0 -4px 8px rgba(0,0,0,.2); pointer-events: auto; transition: transform .3s, box-shadow .3s; animation: dt-contact-arrive .65s cubic-bezier(.2,.8,.2,1) both; }
+.dt-contact-orb-phone { --dt-orb-glow: rgba(225,29,72,.3); background: linear-gradient(to bottom, #fb7185, #e11d48); animation-delay: .1s; }
+.dt-contact-orb-whatsapp { --dt-orb-glow: rgba(16,185,129,.3); background: linear-gradient(to bottom, #34d399, #059669); animation-delay: .2s; }
+.dt-contact-orb-email { animation-delay: .3s; }
+.dt-contact-orb-icon { width: 56px; height: 56px; display: grid; place-items: center; flex-shrink: 0; }
+.dt-contact-orb-icon svg { width: 24px; height: 24px; filter: drop-shadow(0 2px 3px rgba(0,0,0,.2)); }
+.dt-contact-orb-label { max-width: 0; overflow: hidden; opacity: 0; white-space: nowrap; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; transition: max-width .35s, padding .35s, opacity .2s; }
+.dt-contact-orb:is(:hover, :focus-visible) { transform: translateX(-8px); box-shadow: 0 15px 40px var(--dt-orb-glow), inset 0 4px 12px rgba(255,255,255,.4), inset 0 -4px 8px rgba(0,0,0,.2); }
+.dt-contact-orb:is(:hover, :focus-visible) .dt-contact-orb-label { max-width: 210px; padding-left: 24px; opacity: 1; }
+.dt-contact-orb:focus-visible { outline: 2px solid #e5f1ff; outline-offset: 4px; }
+@keyframes dt-contact-arrive { from { opacity: 0; translate: 80px 0; } to { opacity: 1; translate: 0 0; } }
 .dt-pricing-section, .dt-faq-section { display: grid; grid-template-columns: .85fr 1.15fr; gap: 90px; }
 .dt-pricing-section { padding-top: 76px; }
 .dt-pricing-section > div:first-child .dt-section-copy, .dt-faq-section > div:first-child .dt-section-copy { margin-top: 24px; }
@@ -319,7 +347,6 @@
   .dt-pricing-section, .dt-faq-section { grid-template-columns: 1fr; gap: 28px; }
   .dt-pricing-card { padding: 25px 22px; }
   .dt-contact-launcher { right: 18px; bottom: calc(16px + env(safe-area-inset-bottom)); }
-  .dt-contact-launcher-trigger { min-height: 50px; padding: 12px 18px; }
   .dt-contact-intro { padding-top: 0; }
   .dt-check-card { padding: 24px 20px; border-radius: 20px; }
   .dt-check-card h3 { font-size: 21px; }

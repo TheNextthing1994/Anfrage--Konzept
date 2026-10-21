@@ -1,5 +1,19 @@
 # Kompakte Workstation-Navigation
 
+## Korrektur: Diagramm, Kontaktbuttons und konkrete Einstiegslinks – 21.10.2026
+
+Das Diagramm behält auf ausdrücklichen Nutzerwunsch die Eisblau-/Sandfarben aus PR #6. Wiederhergestellt sind der animierte Aufbau beider Kurven, Hervorhebung beim Erkunden, ein Vergleich mit beiden Prozentwerten beim Überfahren beziehungsweise Tastaturfokus, der direkte Klick auf die Diagrammfläche und animierte Balken in der Bereichsanalyse. Alle zehn ursprünglichen Kategorien und Werte bleiben erhalten; die vollständigen Namen „Recht & Compliance“ und „Gesundheitswesen“ sind wieder sichtbar. Escape schließt auch die Vorschau. Der Anthropic-Link ist als Hintergrund gekennzeichnet, nicht als Quelle der illustrierten Zahlen.
+
+Die schwebenden Kontaktaktionen erscheinen wieder einzeln: Anrufen in Rot, WhatsApp in Grün, E-Mail in Slate-Grau. Form, Glanz, Einblendung und ausfahrende Beschriftung orientieren sich am ursprünglichen `SideChatTrigger.tsx`. Die Beschriftung erscheint auch bei Tastaturfokus, alle drei Links besitzen zugängliche Namen und sind direkt erreichbar. Der gemeinsame Kontaktöffner entfällt. Der alte Gemini-Chat wird damit nicht als eingerichteter Dienst ausgegeben; die drei vorhandenen Kontaktwege verwenden weiterhin die zentrale Geschäftskontakt-Konfiguration.
+
+Die vagen Einstiegsaussagen sind durch „Demo direkt ausprobieren“, „Umfang und Preis vorab“ und „Direkter Kontakt zum Entwickler“ ersetzt. Jeder Punkt führt zum dazugehörigen vorhandenen Inhalt. Die ursprünglichen Aussagen „Proof-of-Concept in 5 Tagen“ und „DSGVO-konform“ werden ohne bestätigten Leistungsrahmen beziehungsweise Nachweis nicht als pauschale Zusagen wieder eingeführt.
+
+TypeScript, Produktionsbuild, Diff-Prüfung und Syntaxprüfung des aktualisierten Browser-Skripts sind bestanden. Die gezielte CUA-Prüfung im verwalteten Entwicklungsserver bestätigt alle zehn Analysen mit den ursprünglichen Werten und zwei Balken, Vorschau und Escape, den direkten Diagrammklick, die drei Einstiegslinks, die Kontaktziele, ausfahrende Beschriftung bei Tastaturfokus und die beibehaltenen Diagrammfarben. Geprüft wurde hier 1363 × 936; die früheren mobilen und Workstation-Berichte bleiben getrennte historische Prüfstände. Der Entwicklungsserver erlaubt nun den konkreten internen Vorschauhost `terminal.local`. Die vorhandene Warnung zum Workstation-Chunk bleibt bestehen.
+
+Prüfbericht: [radar-contact-restoration-verification.json](radar-contact-restoration-verification.json). Die Browser-Suite wurde an die wieder direkt sichtbaren Kontaktaktionen angepasst und syntaktisch geprüft; ihr früherer vollständiger Lauf wird nicht als neuer Lauf ausgegeben.
+
+![Diagrammanalyse und ursprüngliche Kontaktbuttons](radar-contact-restored.jpg)
+
 ## Öffentliche Website und Einführung – 21.10.2026
 
 Dieser Folgeschritt baut auf der Kunden-Navigation aus PR #5 (`9b516299d3029a35fc4147e01b032421adb8c8e3`) auf. Die Workstation behält ihre vier Arbeitsbereiche. Website, Einführung und Arbeitsbereich haben nun unterschiedliche Aufgaben:
@@ -20,7 +34,7 @@ Die fest hinterlegten Potenzial-/Nutzungswerte der früheren Demo bleiben **ausd
 
 Die Desktop-Navigation verwendet wieder eine Glaskapsel mit Symbolen und heller aktiver Auswahl. Die Sprachwahl sitzt darin. Unter **„Lösungen“** sind KI-Beratung, Automatisierung, Chatbots/Wissenszugang und Zusammenarbeit erreichbar. „Preise“ und „FAQ“ führen zu tatsächlichen Abschnitten; die jeweiligen Adressen funktionieren auch direkt und nach Neuladen. Auf kleineren Bildschirmen wird die Navigation aufgeklappt. Untermenü und Hauptmenü schließen mit Escape beziehungsweise nach einer Auswahl. Die Ziele werden unterhalb des festen Headers sichtbar und erhalten Tastaturfokus.
 
-Der Kontaktblock enthält E-Mail, anklickbare Telefonnummer und Bregenz als Standort. `src/data/publicContact.ts` ist die gemeinsame Quelle für die Kontaktdaten, die E-Mail-Übergabe und die schwebenden Aktionen. Die abweichende persönliche E-Mail-Adresse aus dem alten `SideChatTrigger.tsx` wird nicht übernommen. Ein einzelner plastischer Kontaktbutton öffnet WhatsApp, Anrufen und E-Mail. Die Leiste lässt sich auch durch Escape oder einen Klick außerhalb schließen. Sie erscheint auf der öffentlichen Website; die Einführung und Workstation behalten ihre eigenen Bedienelemente. Die Links wurden technisch geprüft, ohne einen Anruf, eine Nachricht oder eine E-Mail auszulösen.
+Der Kontaktblock enthält E-Mail, anklickbare Telefonnummer und Bregenz als Standort. `src/data/publicContact.ts` ist die gemeinsame Quelle für die Kontaktdaten, die E-Mail-Übergabe und die schwebenden Aktionen. Die abweichende persönliche E-Mail-Adresse aus dem alten `SideChatTrigger.tsx` wird nicht übernommen. Die erste Fassung mit einem gemeinsamen Kontaktöffner ist durch die oben beschriebenen ursprünglichen Einzelbuttons ersetzt. Sie erscheinen auf der öffentlichen Website; die Einführung und Workstation behalten ihre eigenen Bedienelemente. Die Links wurden technisch geprüft, ohne einen Anruf, eine Nachricht oder eine E-Mail auszulösen.
 
 Im Footer ist GitHub mit dem vorhandenen Repository-Owner verlinkt. Für LinkedIn, Instagram, TikTok und YouTube waren in den geprüften Repos keine Profiladressen vorhanden; die alten Symbole zeigten nur auf `#`. Die Icon-Zuordnung ist vorbereitet, unkonfigurierte Profile werden jedoch nicht als Links ausgegeben. Weitere verifizierte Profile werden in derselben Kontaktkonfiguration ergänzt.
 
@@ -56,7 +70,7 @@ Der bisherige Globus-/Homepage-Einstieg unten in der Sidebar wird zu **„Einfü
 
 Die Browserprüfung für die neuen Wege liegt in `scripts/verify-public-journey.cjs`. Sie prüft öffentliche Starts ohne interne Dateninitialisierung, Branchenübergabe, Korrektur/Validierung des Checks, den tatsächlichen Mailto-Inhalt, wiederholte Abschnittslinks, die interaktive Demo, Datenisolation, Sprache, Direktlinks, Browserhistorie, mobile Navigation und Präferenzen. Die bestehende Workstation-Prüfung öffnet jetzt explizit `#/workstation` und überprüft den Hin-/Rückweg über „Einführung“.
 
-Es sind **22 Prüfungen der öffentlichen Wege und 33 Workstation-Prüfungen bestanden**, ohne Browser-Laufzeitfehler. `npm run lint` und `npm run build` sind ebenfalls erfolgreich. Die öffentlichen Prüfungen wurden nach der letzten Korrektur der mobilen Diagrammbeschriftung und Icon-Ausrichtung erneut auf dem Produktionsbuild ausgeführt; die Änderung betrifft ausschließlich die öffentliche Website. Die vorhandene Vite-Warnung bleibt für den Workstation-Chunk bestehen; dieser wird erst beim Öffnen der Workstation geladen. Bericht: [public-journey-verification.json](public-journey-verification.json).
+Für den Prüfstand von PR #6 sind **22 Prüfungen der öffentlichen Wege und 33 Workstation-Prüfungen bestanden**, ohne Browser-Laufzeitfehler. `npm run lint` und `npm run build` waren ebenfalls erfolgreich. Die öffentlichen Prüfungen wurden damals nach der Korrektur der mobilen Diagrammbeschriftung und Icon-Ausrichtung erneut auf dem Produktionsbuild ausgeführt. Der neue gezielte Prüfstand für Diagramm, Kontaktbuttons und Einstiegslinks steht oben. Die vorhandene Vite-Warnung bleibt für den Workstation-Chunk bestehen; dieser wird erst beim Öffnen der Workstation geladen. Historischer Bericht: [public-journey-verification.json](public-journey-verification.json).
 
 Geprüfte Ansichten:
 
