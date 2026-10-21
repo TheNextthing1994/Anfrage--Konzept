@@ -29,6 +29,7 @@ export function RadarChartSection() {
   const { text, localized } = usePublicText();
   const [selected, setSelected] = useState<number | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ left: number; top: number } | null>(null);
   const root = useRef<HTMLDivElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
   const categoryButtons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -48,7 +49,7 @@ export function RadarChartSection() {
     const angle = (Math.atan2(y, x) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
     return Math.round(angle / (Math.PI * 2) * categories.length) % categories.length;
   };
-  const open = (index: number) => { setHovered(null); setSelected(index); };
+  const open = (index: number) => { setHovered(null); setTooltipPosition(null); setSelected(index); };
 
   const close = () => { if (selected !== null) categoryButtons.current[selected]?.focus({ preventScroll: true }); setHovered(null); setSelected(null); };
   useEffect(() => {
@@ -62,12 +63,12 @@ export function RadarChartSection() {
     return () => { document.removeEventListener('keydown', escape); document.removeEventListener('pointerdown', outside); };
   }, [selected]);
 
-  return <div ref={root} className="dt-radar" aria-labelledby={titleId} onKeyDown={event => { if (event.key === 'Escape') setHovered(null); }}>
+  return <div ref={root} className="dt-radar" data-exploring={active !== null} aria-labelledby={titleId} onKeyDown={event => { if (event.key === 'Escape') setHovered(null); }}>
     <div className="dt-radar-heading"><p className="dt-eyebrow">{text('Möglichkeiten entdecken', 'Откройте возможности')}</p><h2 id={titleId}>{text('KI-Potenzial', 'Потенциал ИИ')}</h2><p>{text('Erkunden Sie das Diagramm. Klicken oder tippen Sie für die Analyse.', 'Исследуйте диаграмму. Нажмите на область для анализа.')}</p></div>
     <div className="dt-radar-stage" role="group" aria-label={text('Interaktives Spinnendiagramm', 'Интерактивная лепестковая диаграмма')}>
       <svg viewBox="0 0 600 560" aria-hidden="true" focusable="false"
-        onPointerMove={event => { if (event.pointerType !== 'touch') setHovered(chartCategory(event)); }}
-        onPointerLeave={() => setHovered(null)} onClick={event => { const index = chartCategory(event); if (index !== null) open(index); }}>
+        onPointerMove={event => { if (event.pointerType !== 'touch') { setHovered(chartCategory(event)); const box = event.currentTarget.getBoundingClientRect(); setTooltipPosition({ left: Math.max(8, Math.min(event.clientX - box.left + 16, box.width - 236)), top: Math.max(8, Math.min(event.clientY - box.top + 16, box.height - 170)) }); } }}
+        onPointerLeave={() => { setHovered(null); setTooltipPosition(null); }} onClick={event => { const index = chartCategory(event); if (index !== null) open(index); }}>
         <defs><radialGradient id={`potential-${id}`}><stop offset="0" stopColor="#bedcfd" stopOpacity=".3" /><stop offset="1" stopColor="#8baed8" stopOpacity=".1" /></radialGradient><radialGradient id={`usage-${id}`}><stop offset="0" stopColor="#f0d6bb" stopOpacity=".44" /><stop offset="1" stopColor="#bd9675" stopOpacity=".22" /></radialGradient></defs>
         {[.25, .5, .75, 1].map(scale => <polygon key={scale} points={polygon(() => 166 * scale)} className="dt-radar-grid" />)}
         {categories.map((_, index) => { const p = point(index, 166); return <line key={index} x1={300} y1={280} x2={p.x} y2={p.y} className={active === index ? 'dt-radar-axis dt-radar-axis-active' : 'dt-radar-axis'} />; })}
@@ -78,13 +79,13 @@ export function RadarChartSection() {
       </svg>
       {categories.map((item, index) => {
         const p = point(index, 222);
-        return <button key={item.id} ref={element => { categoryButtons.current[index] = element; }} type="button" className="dt-radar-label"
+        return <button key={item.id} ref={element => { categoryButtons.current[index] = element; }} type="button" className="dt-radar-label" data-category={item.id}
           style={{ left: `${p.x / 600 * 100}%`, top: `${p.y / 560 * 100}%` }} aria-expanded={selected === index}
           aria-controls={selected === index ? detailId : undefined} aria-describedby={preview && hovered === index ? tooltipId : undefined}
-          onPointerEnter={event => { if (event.pointerType !== 'touch') setHovered(index); }} onPointerLeave={() => setHovered(null)}
-          onFocus={() => setHovered(index)} onBlur={() => setHovered(null)} onClick={() => open(index)}>{localized(item.label)}</button>;
+          onPointerEnter={event => { if (event.pointerType !== 'touch') { setTooltipPosition(null); setHovered(index); } }} onPointerLeave={() => setHovered(null)}
+          onFocus={() => { setTooltipPosition(null); setHovered(index); }} onBlur={() => setHovered(null)} onClick={() => open(index)}>{localized(item.label)}</button>;
       })}
-      {preview && <div id={tooltipId} role="tooltip" className={`dt-radar-tooltip ${hovered !== null && point(hovered, 1).y < 280 ? 'dt-radar-tooltip-bottom' : ''}`}>
+      {preview && <div id={tooltipId} role="tooltip" style={tooltipPosition ? { left: tooltipPosition.left, top: tooltipPosition.top, bottom: 'auto', transform: 'none' } : undefined} className={`dt-radar-tooltip ${hovered !== null && point(hovered, 1).y < 280 ? 'dt-radar-tooltip-bottom' : ''}`}>
         <strong>{localized(preview.label)}</strong>
         <dl><div><dt>{text('Potenzial', 'Потенциал')}</dt><dd>{preview.potential}%</dd></div><div><dt>{text('Aktuelle Nutzung', 'Текущее применение')}</dt><dd>{preview.usage}%</dd></div></dl>
         <span>{text('Beispielwerte · Klicken für Analyse', 'Примерные значения · Нажмите для анализа')}<ArrowRight aria-hidden="true" /></span>

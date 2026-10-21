@@ -1,0 +1,142 @@
+{
+  "date": "2026-10-21",
+  "scope": "Targeted cinematic motion restoration, on the managed Sites development preview",
+  "base_commit": "d313125efa76c06546eb1b1820f2bc7e89e49279",
+  "original_reference_commit": "653706a05f92420681043fc160eea6314f6cf025",
+  "viewport": {
+    "height": 936,
+    "width": 1363
+  },
+  "browser_checks": [
+    {
+      "check": "Original six tabs are visible",
+      "passed": true
+    },
+    {
+      "check": "Price tab opens its own content panel",
+      "passed": true
+    },
+    {
+      "check": "KI-Beratung: separate animated panel and three content cards",
+      "passed": true
+    },
+    {
+      "check": "Automatisierung: separate animated panel and three content cards",
+      "passed": true
+    },
+    {
+      "check": "Chatbot: separate animated panel and three content cards",
+      "passed": true
+    },
+    {
+      "check": "FAQ opens and its first answer remains available",
+      "passed": true
+    },
+    {
+      "check": "The two original industry rows contain twenty accessible original choices",
+      "passed": true
+    },
+    {
+      "check": "Industry movement can be paused",
+      "passed": true
+    },
+    {
+      "check": "An industry tile opens its example ideas in a dialog",
+      "passed": true
+    },
+    {
+      "check": "Industry dialog closes with Escape after its exit transition",
+      "passed": true
+    },
+    {
+      "check": "Industry example transfers into the persistent contact journey",
+      "passed": true
+    },
+    {
+      "check": "The animated potential-check steps advance while preserving their answers",
+      "passed": true
+    },
+    {
+      "check": "Changing website tabs preserves the potential-check step",
+      "passed": true
+    },
+    {
+      "check": "Original circular language controls switch the current form into Russian",
+      "passed": true
+    },
+    {
+      "check": "Selected industry reaches the final contact form",
+      "passed": true
+    },
+    {
+      "check": "The radar restores illuminated exploration and both hover/focus values in the retained palette",
+      "passed": true
+    },
+    {
+      "check": "Original demo console, two processing bars and eight throughput bars are visible",
+      "passed": true
+    },
+    {
+      "check": "The scrolled header uses the requested translucent glass",
+      "passed": true
+    },
+    {
+      "check": "Silver glossy heading and opposite moving industry rows on the German home view",
+      "passed": true
+    }
+  ],
+  "animation_evidence": {
+    "industry_tracks": [
+      {
+        "direction": "normal",
+        "duration": "80s",
+        "playState": "running"
+      },
+      {
+        "direction": "reverse",
+        "duration": "90s",
+        "playState": "running"
+      }
+    ],
+    "explicit_pause": "false",
+    "glossy_text": "Passende KI-Lösung"
+  },
+  "observation_notes": [
+    "An initial Escape observation was sampled before the exit transition completed. A later explicit Escape plus a detached-dialog wait returned zero dialogs.",
+    "An initial ticker/heading observation was taken while the Russian price panel was active. The German home view was subsequently opened and both 80/90-second opposite tracks and the silver glossy heading were verified.",
+    "Industry tracks pause during pointer hover or focus; explicit pause additionally exposes horizontally scrollable static rows. Both tracks resumed after focus and pointer left the ticker."
+  ],
+  "source_checks": [
+    {
+      "check": "npm run lint (TypeScript --noEmit)",
+      "passed": true
+    },
+    {
+      "check": "npm run build (production Vite build)",
+      "passed": true
+    },
+    {
+      "check": "node --check scripts/verify-public-journey.cjs",
+      "passed": true
+    },
+    {
+      "check": "git diff --check",
+      "passed": true
+    },
+    {
+      "check": "All 20 original industry labels and all 60 idea strings match in German and Russian",
+      "passed": true
+    }
+  ],
+  "screenshots": {
+    "hero": "cinematic-motion-home.jpg",
+    "console": "cinematic-motion-console.jpg",
+    "ticker": "cinematic-motion-ticker.jpg"
+  },
+  "limits": [
+    "The current browser check is desktop-only. Earlier mobile and Workstation reports remain historical and are not represented as new runs.",
+    "The updated public-journey browser script was syntax-checked; its complete earlier suite was not rerun for this change.",
+    "Contact links were inspected without placing a call or sending an email or WhatsApp message.",
+    "Console metrics and radar values remain clearly labelled illustrative examples; no backend or external channel integration was added."
+  ]
+}
