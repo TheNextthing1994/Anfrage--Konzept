@@ -10,7 +10,7 @@ import { Filter, Hand, BoxSelect, Target, Maximize2, Plus, Info, X, Check, Arrow
 import { ProcessNodeDetail, ProcessNodeStatus } from '../data/workstationData';
 import { EventStormingNode, EventStormingNodeData } from './EventStormingNode';
 import { generateEventStormingGraph } from '../utils/eventStormingGraph';
-import { useReducedMotionPreference } from '../hooks/useReducedMotionPreference';
+import { readReducedMotionPreference, useReducedMotionPreference } from '../hooks/useReducedMotionPreference';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const nodeTypes = { eventStorming: EventStormingNode };
@@ -32,7 +32,14 @@ const EventStormingCanvasInner: React.FC<EventStormingCanvasProps> = ({
   onSelectNode, onStatusChange, onFilterChange, onOpenAddNodeModal
 }) => {
   const { t } = useLanguage();
-  const { fitView, fitBounds, setCenter, getNodes, getViewport, screenToFlowPosition } = useReactFlow();
+  const { fitView: queueFitView, fitBounds, setCenter, setViewport, getNodes, getViewport, screenToFlowPosition } = useReactFlow();
+  const fitView = useCallback((options: Parameters<typeof queueFitView>[0]) => {
+    const reduced = readReducedMotionPreference();
+    // fitView is queued by React Flow. Stop an older camera transition before
+    // waiting for the next frame when the OS asks for an immediate change.
+    if (reduced) void setViewport(getViewport(), { duration: 0 });
+    return queueFitView({ ...options, duration: reduced ? 0 : options?.duration });
+  }, [queueFitView, getViewport, setViewport]);
   const nodesInitialized = useNodesInitialized();
   const { zoom } = useViewport();
   const reduceMotion = useReducedMotionPreference();
