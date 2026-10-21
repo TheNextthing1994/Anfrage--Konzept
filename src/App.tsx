@@ -11,7 +11,7 @@ function readLocation() {
   const path = window.location.hash.replace(/^#\/?/, '');
   return {
     page: path === 'workstation' ? 'workstation' : path === 'demo' ? 'demo' : 'website',
-    section: ['loesungen', 'ablauf', 'kontakt'].includes(path) ? path : null
+    section: ['loesungen', 'beratung', 'automatisierung', 'chatbots', 'ablauf', 'preise', 'faq', 'kontakt'].includes(path) ? path : null
   };
 }
 
@@ -62,7 +62,7 @@ export default function App() {
           </div>
         )}
         {location.page !== 'workstation' && (
-          <PublicLayout page={location.page === 'demo' ? 'demo' : 'website'}>
+          <PublicLayout page={location.page === 'demo' ? 'demo' : 'website'} activeSection={location.section}>
             <Suspense fallback={loading}>
               {location.page === 'demo' ? <ProductDemo /> : <PublicWebsite />}
             </Suspense>

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowRight, Check, CheckCircle2, FileText, Hammer, Layers3, MessageSquare, Play, ShoppingBag } from 'lucide-react';
+import { ArrowRight, Check, Hammer, MessageSquare, Play, ShoppingBag } from 'lucide-react';
 import { PotentialCheck } from './PotentialCheck';
 import { type LocalizedText, usePublicText } from './usePublicText';
+import { RadarChartSection } from './RadarChartSection';
+import { PricingAndFaq, ServiceOverview } from './WebsiteInformation';
 
 // Curated from Berufsgruppen-DigitalTwinArchitecs.io: the brand, industry examples and potential check.
 const examples: { icon: typeof Hammer; name: LocalizedText; title: LocalizedText; problem: LocalizedText; result: LocalizedText; items: LocalizedText[] }[] = [
@@ -35,22 +37,12 @@ export function PublicWebsite() {
           text('Ein konkreter Ablauf', 'Один конкретный процесс'), text('Gemeinsam geprüft', 'Проверяем вместе'), text('Passend zu Ihrem Team', 'Под вашу команду')
         ].map(item => <li key={item}><Check aria-hidden="true" />{item}</li>)}</ul>
       </div>
-      <div className="dt-hero-visual">
-        <div className="dt-orbit dt-orbit-one" aria-hidden="true" /><div className="dt-orbit dt-orbit-two" aria-hidden="true" />
-        <div className="dt-glass dt-hero-preview">
-          <div className="dt-preview-top"><span className="dt-mini-brand">D.T.</span><span>{text('Ein Ablauf. Ein klarer Überblick.', 'Один процесс. Всё на виду.')}</span><span className="dt-demo-badge">{text('Beispiel', 'Пример')}</span></div>
-          <div className="dt-preview-heading"><p>{text('Vom Beleg zum Überblick', 'От документа — к ясности')}</p><h2>{text('Alles an seinem Platz.', 'Всё на своём месте.')}</h2></div>
-          <div className="dt-preview-files">
-            {[['LS-1042.pdf', text('Baustelle Nord', 'Объект Север'), true], ['LS-1043.jpg', text('Zuordnung prüfen', 'Проверить объект'), false], ['LS-1044.pdf', text('Baustelle West', 'Объект Запад'), true]].map(([name, label, ready]) => <div className="dt-preview-file" key={String(name)}><span className="dt-file-symbol"><FileText aria-hidden="true" /></span><div><strong>{name}</strong><span>{label}</span></div>{ready ? <CheckCircle2 className="dt-file-ready" aria-label={text('Zugeordnet', 'Распределён')} /> : <span className="dt-status-dot" aria-hidden="true" />}</div>)}
-          </div>
-          <div className="dt-preview-bottom"><span><Layers3 aria-hidden="true" />{text('Eine Rückfrage ist offen', 'Один вопрос требует уточнения')}</span><a href="#/demo" aria-label={text('Beispiel in der Produktdemo öffnen', 'Открыть пример в демо')}><ArrowRight aria-hidden="true" /></a></div>
-        </div>
-        <p className="dt-visual-caption">{text('Eine mögliche Lösung. Ihr Betrieb bestimmt den Ablauf.', 'Пример решения. Процесс определяет ваш бизнес.')}</p>
-      </div>
+      <div className="dt-hero-visual"><RadarChartSection /></div>
     </section>
 
     <section id="loesungen" tabIndex={-1} className="dt-public-section dt-solutions-section" aria-labelledby="solutions-title">
       <div className="dt-public-container">
+        <ServiceOverview />
         <div className="dt-section-heading"><div><p className="dt-eyebrow">{text('Im Alltag beginnt die Lösung', 'Решение начинается с повседневных задач')}</p><h2 id="solutions-title">{text('Kommt Ihnen das bekannt vor?', 'Знакомая ситуация?')}</h2></div><p className="dt-section-copy">{text('Drei Beispiele für einen sinnvollen ersten Schritt. Wir beginnen dort, wo Ihrem Team heute Arbeit liegen bleibt.', 'Три примера для первого шага. Начинаем с того, что сегодня отнимает время у вашей команды.')}</p></div>
         <div className="dt-industry-options" role="group" aria-label={text('Branchenbeispiele', 'Примеры по отраслям')}>
           {examples.map((item, index) => <button type="button" key={index} aria-pressed={selected === index} onClick={() => setSelected(index)}><item.icon aria-hidden="true" />{localized(item.name)}</button>)}
@@ -73,6 +65,7 @@ export function PublicWebsite() {
     </section>
 
     <section className="dt-public-container dt-twin-note"><span className="dt-public-monogram" aria-hidden="true">D.T.</span><div><h2>{text('Ihr Wissen wird im Alltag nutzbar.', 'Ваши знания помогают в работе.')}</h2><p>{text('Die Idee des Digitalen Zwillings: Ihr Fachwissen, Ihre Regeln und Ihre Abläufe bilden die Grundlage der Lösung. Ihr Team behält die Entscheidung bei offenen Fragen und wichtigen Freigaben.', 'Идея цифрового двойника: ваши знания, правила и процессы становятся основой решения. Открытые вопросы и важные решения остаются за вашей командой.')}</p></div></section>
+    <PricingAndFaq />
     <PotentialCheck example={contactExample === null ? '' : localized(examples[contactExample].title)} />
   </>;
 }

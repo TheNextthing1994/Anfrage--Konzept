@@ -1,28 +1,40 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Menu, X } from 'lucide-react';
+import { ArrowRight, BadgeHelp, ChevronDown, CircleDollarSign, Home, Menu, Play, X, Zap } from 'lucide-react';
 import { LanguageToggle } from '../../i18n/LanguageContext';
 import { usePublicText } from './usePublicText';
+import { ContactLauncher } from './ContactLauncher';
+import { SocialLinks } from './SocialLinks';
 
-export function PublicLayout({ page, children }: { page: 'website' | 'demo'; children: React.ReactNode }) {
+export function PublicLayout({ page, activeSection, children }: { page: 'website' | 'demo'; activeSection?: string | null; children: React.ReactNode }) {
   const { text } = usePublicText();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const solutionsButton = useRef<HTMLButtonElement>(null);
+  const solutionsRoot = useRef<HTMLDivElement>(null);
+  const solutionsActive = page === 'website' && ['loesungen', 'beratung', 'automatisierung', 'chatbots', 'ablauf'].includes(activeSection || '');
+  const closeNavigation = () => { setMenuOpen(false); setSolutionsOpen(false); };
 
   useEffect(() => {
-    const close = () => setMenuOpen(false);
+    const close = () => { setMenuOpen(false); setSolutionsOpen(false); };
     window.addEventListener('hashchange', close);
     return () => window.removeEventListener('hashchange', close);
   }, []);
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !solutionsOpen) return;
     const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { setMenuOpen(false); menuButton.current?.focus(); }
+      if (event.key === 'Escape') {
+        if (solutionsOpen) { setSolutionsOpen(false); solutionsButton.current?.focus(); }
+        else { setMenuOpen(false); menuButton.current?.focus(); }
+      }
     };
+    const outside = (event: PointerEvent) => { if (!solutionsRoot.current?.contains(event.target as Node)) setSolutionsOpen(false); };
     document.addEventListener('keydown', escape);
-    return () => document.removeEventListener('keydown', escape);
-  }, [menuOpen]);
+    document.addEventListener('pointerdown', outside);
+    return () => { document.removeEventListener('keydown', escape); document.removeEventListener('pointerdown', outside); };
+  }, [menuOpen, solutionsOpen]);
 
-  return <div className="dt-public" onClick={event => {
+  return <div className="dt-public" data-page={page} onClick={event => {
     const href = (event.target as HTMLElement).closest('a')?.getAttribute('href');
     // A repeated hash link does not emit hashchange. It must still scroll to its destination.
     if (href?.startsWith('#/') && href === window.location.hash) {
@@ -41,12 +53,23 @@ export function PublicLayout({ page, children }: { page: 'website' | 'demo'; chi
           <span>DigitalTwin<span className="dt-brand-accent">Architecs</span><small>.io</small></span>
         </a>
         <nav id="public-navigation" className="dt-public-nav" data-open={menuOpen} aria-label={text('Website-Navigation', 'Навигация сайта')}>
-          <a href="#/loesungen" onClick={() => setMenuOpen(false)}>{text('Lösungen', 'Решения')}</a>
-          <a href="#/ablauf" onClick={() => setMenuOpen(false)}>{text('Zusammenarbeit', 'Как мы работаем')}</a>
-          <a href="#/demo" onClick={() => setMenuOpen(false)} aria-current={page === 'demo' ? 'page' : undefined}>{text('Produktdemo', 'Демо продукта')}</a>
+          <a href="#/" className="dt-nav-pill" onClick={closeNavigation} aria-current={page === 'website' && !activeSection ? 'page' : undefined}><Home aria-hidden="true" />{text('Start', 'Главная')}</a>
+          <div className="dt-solutions-navigation" ref={solutionsRoot}>
+            <button type="button" ref={solutionsButton} className="dt-nav-pill" data-active={solutionsActive} aria-expanded={solutionsOpen} aria-controls={solutionsOpen ? 'public-solutions' : undefined} onClick={() => setSolutionsOpen(open => !open)}><Zap aria-hidden="true" />{text('Lösungen', 'Решения')}<ChevronDown aria-hidden="true" /></button>
+            {solutionsOpen && <div id="public-solutions" className="dt-solutions-dropdown dt-glass">
+              {[
+                ['loesungen', text('Alle Lösungen', 'Все решения')], ['beratung', text('KI-Beratung', 'Консультация по ИИ')],
+                ['automatisierung', text('Automatisierung', 'Автоматизация')], ['chatbots', text('Chatbots & Wissenszugang', 'Чат-боты и знания')], ['ablauf', text('Zusammenarbeit', 'Как мы работаем')]
+              ].map(([section, label]) => <a key={section} href={`#/${section}`} onClick={closeNavigation} aria-current={page === 'website' && activeSection === section ? 'location' : undefined}>{label}<ArrowRight aria-hidden="true" /></a>)}
+            </div>}
+          </div>
+          <a href="#/demo" className="dt-nav-pill" onClick={closeNavigation} aria-current={page === 'demo' ? 'page' : undefined}><Play aria-hidden="true" />{text('Produktdemo', 'Демо продукта')}</a>
+          <a href="#/preise" className="dt-nav-pill" onClick={closeNavigation} aria-current={page === 'website' && activeSection === 'preise' ? 'location' : undefined}><CircleDollarSign aria-hidden="true" />{text('Preise', 'Стоимость')}</a>
+          <a href="#/faq" className="dt-nav-pill" onClick={closeNavigation} aria-current={page === 'website' && activeSection === 'faq' ? 'location' : undefined}><BadgeHelp aria-hidden="true" />FAQ</a>
+          <div className="dt-public-language-desktop"><LanguageToggle /></div>
         </nav>
         <div className="dt-public-header-actions">
-          <LanguageToggle compact />
+          <div className="dt-public-language-mobile"><LanguageToggle compact /></div>
           <a className="dt-button dt-button-small dt-header-contact" href="#/kontakt">{text('Ablauf besprechen', 'Обсудить задачу')}<ArrowRight aria-hidden="true" /></a>
           <button ref={menuButton} type="button" className="dt-public-menu-button" aria-controls="public-navigation" aria-expanded={menuOpen}
             aria-label={menuOpen ? text('Menü schließen', 'Закрыть меню') : text('Menü öffnen', 'Открыть меню')}
@@ -62,6 +85,8 @@ export function PublicLayout({ page, children }: { page: 'website' | 'demo'; chi
         <a href="#/demo">{text('Einführung', 'Знакомство с продуктом')}</a>
         <a href="#/workstation">Workstation</a>
       </nav>
+      <SocialLinks />
     </footer>
+    {page === 'website' && <ContactLauncher />}
   </div>;
 }

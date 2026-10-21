@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Copy, Mail } from 'lucide-react';
 import { type LocalizedText, usePublicText } from './usePublicText';
+import { PUBLIC_CONTACT } from '../../data/publicContact';
+import { ContactDetails } from './ContactDetails';
 
 const questions: { label: LocalizedText; options: LocalizedText[] }[] = [
   { label: ['Was soll im Alltag einfacher werden?', 'Что вы хотите упростить?'], options: [
@@ -16,7 +18,7 @@ const questions: { label: LocalizedText; options: LocalizedText[] }[] = [
 ];
 
 // Retained from the owner's existing website; no delivery service is implied.
-export const CONTACT_EMAIL = 'office@digitaltwinarchitecs.io';
+export const CONTACT_EMAIL = PUBLIC_CONTACT.email;
 
 export function PotentialCheck({ example }: { example: string }) {
   const { text, localized } = usePublicText();
@@ -62,7 +64,7 @@ export function PotentialCheck({ example }: { example: string }) {
         <p className="dt-eyebrow">{text('Der nächste Schritt', 'Следующий шаг')}</p>
         <h2 id="contact-title">{text('Wo verliert Ihr Team heute Zeit?', 'На что ваша команда тратит время?')}</h2>
         <p className="dt-section-copy">{text('Der Potenzial-Check hilft, Ihr Anliegen einzuordnen. Beschreiben Sie einen konkreten Ablauf – wir klären gemeinsam, was sich sinnvoll verbessern lässt.', 'Короткая анкета поможет сформулировать задачу. Опишите один конкретный процесс — вместе определим, что стоит улучшить.')}</p>
-        <a className="dt-text-link" href={`mailto:${CONTACT_EMAIL}`}><Mail aria-hidden="true" />{CONTACT_EMAIL}</a>
+        <ContactDetails />
         <p className="dt-caption">{text('Die Antworten bleiben während des Checks in dieser Seite. Zum Versand öffnen Sie anschließend Ihr E-Mail-Programm.', 'Ответы остаются на этой странице во время заполнения. Для отправки вы затем откроете свою почтовую программу.')}</p>
       </div>
       <div className="dt-glass dt-check-card">

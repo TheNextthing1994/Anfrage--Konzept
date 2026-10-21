@@ -1,16 +1,22 @@
 {
   "baseCommit": "9b516299d3029a35fc4147e01b032421adb8c8e3",
+  "previousImplementationCommit": "acbef639a4c3a7c1fff8c5e994e4dd324273ddfd",
   "oldWebsiteCommit": "653706a05f92420681043fc160eea6314f6cf025",
   "validation": {
     "typecheck": "npm run lint — passed",
     "productionBuild": "npm run build — passed",
     "existingWarning": "Workstation JavaScript chunk remains above Vite’s 500 kB warning threshold."
   },
-  "passedBrowserChecks": 48,
+  "passedBrowserChecks": 55,
   "publicJourney": {
-    "passed": 15,
+    "passed": 22,
     "checks": [
       "The public entry explains customer value and does not load or initialize workstation data",
+      "The capsule navigation marks the active destination, reaches real service content and supports Escape with focus return",
+      "Prices and FAQ have working destinations, readable content and a keyboard-accessible accordion",
+      "The ten-axis radar opens category details by keyboard or pointer and clearly identifies its values as examples",
+      "One contact control opens WhatsApp, telephone and the shared business email; Escape and outside clicks close it",
+      "The contact block has real contact targets and the footer only renders the known GitHub profile",
       "Industry selection changes the content and takes the chosen example into the contact journey",
       "The potential check requires a choice, preserves corrected answers and validates contact fields",
       "A reviewable, correctly encoded email draft contains the request; no sent claim, backend call or internal request is created",
@@ -22,6 +28,8 @@
       "Loading the workstation stylesheet preserves the public demo glass material",
       "The small introduction link preserves the opened customer, saved work and four-area navigation",
       "Browser back and forward keep the website, demo and workstation destinations consistent",
+      "The radar supports touch input and all category targets stay within the 390px viewport at 44px or larger",
+      "The mobile solutions menu opens a service section and then frees the page again",
       "At 390px the site and demo fit, touch targets fit and the menu closes with selection or Escape",
       "The entry and demo preview also fit a 320px viewport",
       "Reduced motion and increased contrast remain usable in the public introduction"
@@ -33,7 +41,7 @@
       "390x844",
       "320x760"
     ],
-    "timestamp": "2026-10-21T11:34:51.289Z"
+    "timestamp": "2026-10-21T14:19:49.644Z"
   },
   "workstationRegression": {
     "passed": 33,
@@ -79,6 +87,6 @@
       "1440x900",
       "390x844"
     ],
-    "timestamp": "2026-10-21T11:36:10.919Z"
+    "timestamp": "2026-10-21T14:18:48.656Z"
   }
 }
