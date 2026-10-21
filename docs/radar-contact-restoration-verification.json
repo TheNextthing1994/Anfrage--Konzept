@@ -1,0 +1,161 @@
+{
+  "checked_at": "2026-10-21T15:12:22.380Z",
+  "method": "Managed Sites dev preview through CUA browser",
+  "source_reference": "TheNextthing1994/Berufsgruppen-DigitalTwinArchitecs.io@653706a05f92420681043fc160eea6314f6cf025",
+  "visual": {
+    "meterTransforms": [
+      "matrix(0.85, 0, 0, 1, 0, 0)",
+      "matrix(0.18, 0, 0, 1, 0, 0)"
+    ],
+    "overflow": false,
+    "palette": [
+      "rgb(173, 205, 243)",
+      "rgb(211, 178, 148)"
+    ],
+    "phoneWidth": 140,
+    "viewport": [
+      1363,
+      936
+    ]
+  },
+  "checks": [
+    {
+      "check": "Escape returns focus",
+      "passed": true
+    },
+    {
+      "category": "Management",
+      "values": [
+        "85%",
+        "18%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Finanzen",
+      "values": [
+        "92%",
+        "22%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "IT & Software",
+      "values": [
+        "95%",
+        "35%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Ingenieurwesen",
+      "values": [
+        "78%",
+        "12%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Recht & Compliance",
+      "values": [
+        "88%",
+        "10%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Bildung",
+      "values": [
+        "75%",
+        "15%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Medien & Design",
+      "values": [
+        "82%",
+        "25%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Gesundheitswesen",
+      "values": [
+        "65%",
+        "8%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Vertrieb",
+      "values": [
+        "72%",
+        "14%"
+      ],
+      "meters": 2
+    },
+    {
+      "category": "Verwaltung",
+      "values": [
+        "90%",
+        "28%"
+      ],
+      "meters": 2
+    },
+    {
+      "check": "Clicking plotted point opens Management",
+      "passed": true
+    },
+    {
+      "check": "Hero price link reaches actual price section",
+      "passed": true
+    },
+    {
+      "check": "Hero direct contact link reaches contact section",
+      "passed": true
+    },
+    {
+      "check": "Hero demo link opens interactive demo after the lazy-loaded route is ready",
+      "passed": true
+    },
+    {
+      "check": "Keyboard focus expands the original red call orb",
+      "passed": true
+    },
+    {
+      "check": "Focus preview exposes Finanzen 92% and 22%",
+      "passed": true
+    },
+    {
+      "check": "Escape dismisses preview without opening analysis",
+      "passed": true
+    }
+  ],
+  "contacts": [
+    {
+      "href": "tel:+436604763085",
+      "label": "Anrufen"
+    },
+    {
+      "href": "https://wa.me/436604763085",
+      "label": "WhatsApp"
+    },
+    {
+      "href": "mailto:office@digitaltwinarchitecs.io",
+      "label": "E-Mail"
+    }
+  ],
+  "screenshot": "radar-contact-restored.jpg",
+  "notes": [
+    "No call, WhatsApp message or email was triggered.",
+    "Desktop viewport only in this focused follow-up; prior mobile and workstation reports remain historical.",
+    "Browser extension metadata errors were observed; no application error was observed in these interactions."
+  ],
+  "source_checks": {
+    "typescript": "passed",
+    "production_build": "passed",
+    "diff_whitespace": "passed",
+    "browser_script_syntax": "passed"
+  }
+}

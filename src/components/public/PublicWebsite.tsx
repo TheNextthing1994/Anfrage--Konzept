@@ -34,8 +34,10 @@ export function PublicWebsite() {
         <p className="dt-hero-description">{text('Weniger Suchen. Weniger Nachtragen. Mehr Zeit für Ihre eigentliche Arbeit. Wir entwickeln digitale Abläufe, die Ihr Team im Alltag entlasten.', 'Меньше поисков и ручного ввода. Больше времени на основную работу. Создаём цифровые процессы, которые помогают вашей команде каждый день.')}</p>
         <div className="dt-button-row"><a href="#/kontakt" className="dt-button">{text('Potenzial-Check starten', 'Оценить свою задачу')}<ArrowRight aria-hidden="true" /></a><a href="#/demo" className="dt-button dt-button-quiet"><Play aria-hidden="true" />{text('So funktioniert’s', 'Как это работает')}</a></div>
         <ul className="dt-hero-promises">{[
-          text('Ein konkreter Ablauf', 'Один конкретный процесс'), text('Gemeinsam geprüft', 'Проверяем вместе'), text('Passend zu Ihrem Team', 'Под вашу команду')
-        ].map(item => <li key={item}><Check aria-hidden="true" />{item}</li>)}</ul>
+          { label: text('Demo direkt ausprobieren', 'Попробовать демо'), href: '#/demo' },
+          { label: text('Umfang und Preis vorab', 'Объём и цена заранее'), href: '#/preise' },
+          { label: text('Direkter Kontakt zum Entwickler', 'Связь с разработчиком'), href: '#/kontakt' }
+        ].map(item => <li key={item.href}><a href={item.href}><Check aria-hidden="true" />{item.label}</a></li>)}</ul>
       </div>
       <div className="dt-hero-visual"><RadarChartSection /></div>
     </section>
