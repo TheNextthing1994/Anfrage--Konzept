@@ -1,0 +1,84 @@
+{
+  "baseCommit": "9b516299d3029a35fc4147e01b032421adb8c8e3",
+  "oldWebsiteCommit": "653706a05f92420681043fc160eea6314f6cf025",
+  "validation": {
+    "typecheck": "npm run lint — passed",
+    "productionBuild": "npm run build — passed",
+    "existingWarning": "Workstation JavaScript chunk remains above Vite’s 500 kB warning threshold."
+  },
+  "passedBrowserChecks": 48,
+  "publicJourney": {
+    "passed": 15,
+    "checks": [
+      "The public entry explains customer value and does not load or initialize workstation data",
+      "Industry selection changes the content and takes the chosen example into the contact journey",
+      "The potential check requires a choice, preserves corrected answers and validates contact fields",
+      "A reviewable, correctly encoded email draft contains the request; no sent claim, backend call or internal request is created",
+      "Repeated section links still scroll below the sticky header",
+      "The introduction explains the sample request and lets visitors inspect responsibilities in the process",
+      "The sample preview accepts and corrects a document assignment",
+      "Demo approval requires acknowledgement, can restart and never changes stored customer work",
+      "Deep links reload correctly and the public site and interactive demo support Russian",
+      "Loading the workstation stylesheet preserves the public demo glass material",
+      "The small introduction link preserves the opened customer, saved work and four-area navigation",
+      "Browser back and forward keep the website, demo and workstation destinations consistent",
+      "At 390px the site and demo fit, touch targets fit and the menu closes with selection or Escape",
+      "The entry and demo preview also fit a 320px viewport",
+      "Reduced motion and increased contrast remain usable in the public introduction"
+    ],
+    "runtimeErrors": [],
+    "browser": "153.0.8010.0",
+    "viewports": [
+      "1440x1000",
+      "390x844",
+      "320x760"
+    ],
+    "timestamp": "2026-10-21T11:34:51.289Z"
+  },
+  "workstationRegression": {
+    "passed": 33,
+    "checks": [
+      "Starts in the full-width incoming-request list with sources, no manual intake and no unrelated inspector or workflow",
+      "Readable initial viewport and no horizontal page overflow",
+      "No demo toolbar; 64px rail expands by keyboard and preserves the canvas camera",
+      "Both sidebar widths persist across reload; keyboard focus survives collapsing",
+      "Four task areas replace nine top-level entries; workflow is absent in the lists, library and opportunities",
+      "Library preserves review, approved standards and capabilities as separate views with truthful approval filtering",
+      "The simplified navigation and library views also work in Russian",
+      "The selected request has one five-step workflow; unrelated existing projects do not enable Build",
+      "The existing approval action creates and opens a project for the selected customer",
+      "Build and return to the process map keep the linked customer request instead of the first project",
+      "The introduction uses its own demo and returning retains the selected customer and compact navigation",
+      "Node selection updates the inspector",
+      "Dragging survives filter and selection changes",
+      "100% reading view and whole-graph overview",
+      "Lasso drag zooms into the selected region",
+      "Process-center button selects a rule and updates the inspector",
+      "Inspector status changes update the graph",
+      "Adding a node still works",
+      "Customer switching resets the appropriate canvas and preserves readable start",
+      "Continue to UX Preview still works",
+      "Responsive viewport 1440x900",
+      "Responsive viewport 390x844",
+      "Review progress reflects confirmed nodes and the review action opens an unresolved step",
+      "Legend originates at its trigger and supports Escape, keyboard return and outside dismissal",
+      "Press feedback appears before release and dragging away cancels the button activation",
+      "A manual pan interrupts the camera transition without a later snap-back",
+      "Changing the OS motion preference preserves the manually chosen canvas position",
+      "Live reduced-motion changes disable camera animation; normal motion resumes without reload",
+      "Higher-contrast preference supplies solid surfaces and defined borders",
+      "Reduced-transparency preference removes blur and uses an opaque material",
+      "Local process derivation provides completion feedback without a simulated loading state",
+      "Mobile navigation uses one compact row, closes after selection and supports Escape with focus return",
+      "Touch controls meet 44px sizing and the mobile legend stays within the viewport"
+    ],
+    "runtimeErrors": [],
+    "browser": "153.0.8010.0",
+    "viewports": [
+      "1920x1080",
+      "1440x900",
+      "390x844"
+    ],
+    "timestamp": "2026-10-21T11:36:10.919Z"
+  }
+}
