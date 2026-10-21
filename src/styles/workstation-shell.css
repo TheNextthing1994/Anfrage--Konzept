@@ -25,7 +25,7 @@
 .dt-sidebar-label { white-space: nowrap; }
 .dt-sidebar-count { margin-left: auto; color: #9eb4ce; font-size: 11px; font-variant-numeric: tabular-nums; }
 .dt-sidebar-footer { display: flex; flex-direction: column; gap: 4px; margin: 0 8px; padding-top: 8px; border-top: 1px solid var(--dt-sidebar-line); }
-.dt-sidebar button { touch-action: manipulation; }
+.dt-sidebar button { min-height: 44px; touch-action: manipulation; }
 .dt-sidebar button:focus-visible { outline: 2px solid #c5e1ff; outline-offset: 2px; }
 .dt-sidebar button:active { background-color: rgba(193, 219, 249, 0.14); }
 

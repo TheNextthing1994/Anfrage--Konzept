@@ -21,7 +21,10 @@ export default function App() {
     selectObjectId?: string,
     openIntake: boolean = false
   ) => {
-    setActiveSection(initialSection);
+    // Older landing-page links still resolve into the current task areas.
+    setActiveSection(initialSection === 'overview' || initialSection === 'settings'
+      ? 'requests'
+      : initialSection === 'inbox' ? 'review' : initialSection);
     if (selectObjectId) {
       setSelectedObjectId(selectObjectId);
     }

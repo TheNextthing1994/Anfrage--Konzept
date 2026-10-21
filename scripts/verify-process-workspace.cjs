@@ -31,8 +31,23 @@ const path = require('node:path');
   const node=id=>page.locator('.react-flow__node[data-id="'+id+'"]');
   const position=id=>node(id).evaluate(e=>e.style.transform);
   const zoom=async()=>parseFloat(await page.locator('.dt-zoom-value').innerText())/100;
+  const openReference=async(target=page)=>{
+    await target.getByRole('button',{name:'Anfrage öffnen: Hoffmann Bau GmbH',exact:true}).click();
+    await target.locator('.dt-process-node').first().waitFor();
+  };
   try {
     await page.goto(base,{waitUntil:'domcontentloaded'});
+    await page.getByRole('heading',{name:'Kundenanfragen',exact:true}).waitFor();
+    assert.equal(await page.locator('.dt-workstation-main > header').count(),0);
+    assert.equal(await page.getByText(/Verknüpfter Baustein ·/).count(),0);
+    assert.equal(await page.getByRole('button',{name:/Neue Anfrage/}).count(),0);
+    assert.ok(await page.getByText(/Quelle:/).count()>=4);
+    assert.equal(await page.getByText(/Marge:|% Reuse/).count(),0,'Financial analysis belongs inside the selected request');
+    await page.getByRole('button',{name:'Seitenleiste ausklappen',exact:true}).click();
+    await page.screenshot({path:path.join(outputDir,'requests-after.png'),fullPage:false});
+    await page.getByRole('button',{name:'Seitenleiste einklappen',exact:true}).click();
+    checks.push('Starts in the full-width incoming-request list with sources, no manual intake and no unrelated inspector or workflow');
+    await openReference();
     await page.locator('.dt-process-node').first().waitFor();
     await page.evaluate(()=>document.fonts.ready);
     await settle();
@@ -43,13 +58,13 @@ const path = require('node:path');
     const assertSingleNavigation=async()=>{
       assert.equal(await page.getByRole('button',{name:/Tabellen-Übersicht|Neues Kundenproblem/}).count(),0);
       assert.equal(await page.getByText('4. Solution Composition',{exact:true}).count(),1);
-      assert.equal(await page.getByRole('button',{name:/Neue Anfrage/}).count(),1);
+      assert.equal(await page.getByRole('button',{name:/Neue Anfrage/}).count(),0);
     };
     await assertSingleNavigation();
 
     // The compact shell must free space without replacing the actual navigation.
-    const sidebar=page.getByRole('complementary',{name:'Arbeitsbereichnavigation',exact:true});
-    const areaNav=sidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true});
+    const sidebar=page.locator('.dt-sidebar');
+    const areaNav=sidebar.locator('.dt-sidebar-nav');
     assert.equal(await page.getByText('FOUNDRY FLOW:',{exact:true}).count(),0);
     assert.equal((await sidebar.boundingBox()).width,64);
     const compactWidth=(await page.locator('.dt-workstation-main').boundingBox()).width;
@@ -64,54 +79,82 @@ const path = require('node:path');
     await page.screenshot({path:path.join(outputDir,'navigation-expanded.png'),fullPage:false,timeout:30000});
     checks.push('No demo toolbar; 64px rail expands by keyboard and preserves the canvas camera');
 
-    await page.reload({waitUntil:'domcontentloaded'}); await page.locator('.dt-process-node').first().waitFor(); await settle();
+    await page.reload({waitUntil:'domcontentloaded'}); await openReference(); await settle();
     assert.equal((await sidebar.boundingBox()).width,240);
     const collapseSidebar=sidebar.getByRole('button',{name:'Seitenleiste einklappen',exact:true});
     await collapseSidebar.focus(); await page.keyboard.press('Enter');
     await page.waitForFunction(()=>document.querySelector('.dt-sidebar').getBoundingClientRect().width===64);
     assert.equal(await sidebar.getByRole('button',{name:'Seitenleiste ausklappen',exact:true}).evaluate(e=>e===document.activeElement),true);
-    await page.reload({waitUntil:'domcontentloaded'}); await page.locator('.dt-process-node').first().waitFor(); await settle();
+    await page.reload({waitUntil:'domcontentloaded'}); await openReference(); await settle();
     assert.equal((await sidebar.boundingBox()).width,64);
     checks.push('Both sidebar widths persist across reload; keyboard focus survives collapsing');
 
     const areaHeadings=[
-      ['Control Plane','Inbox — Neue Inputs'], ['Inbox','Inbox — Neue Inputs'],
-      ['Review','Review Queue'], ['Registry','Registry — Bestätigte System-Standards'],
-      ['Portfolio','Portfolio / Reopen Trigger Radar'], ['Foundry','Foundry Capabilities'],
-      ['Active','Active — Laufende Initiativen & Builds'], ['Settings','Settings'],
-      ['Requests','Prozess verstehen']
+      ['Anfragen','Kundenanfragen'], ['Projekte','Kundenprojekte'],
+      ['Bibliothek','Bibliothek'], ['Chancen','Chancen']
     ];
+    assert.equal(await areaNav.getByRole('button').count(),4);
     for(const [label,heading] of areaHeadings){
       await areaNav.getByRole('button',{name:label,exact:true}).click();
       await page.getByRole('heading',{name:heading,exact:true}).waitFor();
       assert.equal(await areaNav.getByRole('button',{name:label,exact:true}).getAttribute('aria-current'),'page');
+      assert.equal(await page.locator('.dt-workstation-main > header').count(),0);
     }
-    checks.push('Every workspace remains reachable from the collapsed icon rail');
+    assert.equal(await page.getByRole('button',{name:'Analytics',exact:true}).count(),0);
+    checks.push('Four task areas replace nine top-level entries; workflow is absent in the lists, library and opportunities');
+
+    await areaNav.getByRole('button',{name:'Bibliothek',exact:true}).click();
+    const libraryNav=page.getByRole('navigation',{name:'Bibliothek',exact:true});
+    assert.equal(await page.getByText('Tool: n8n',{exact:true}).count(),0,'Candidates must not appear as approved standards');
+    await libraryNav.getByRole('button',{name:/Zu prüfen/}).click();
+    await page.getByRole('heading',{name:'Zu prüfen',exact:true}).waitFor();
+    assert.equal(await areaNav.getByRole('button',{name:'Bibliothek',exact:true}).getAttribute('aria-current'),'page');
+    assert.equal(await page.getByText('Tool: n8n',{exact:true}).count(),1);
+    assert.equal(await page.getByText(/Verknüpfter Baustein ·/).count(),1);
+    await libraryNav.getByRole('button',{name:/Fähigkeiten/}).click();
+    await page.getByRole('heading',{name:'Fähigkeiten',exact:true}).waitFor();
+    await page.screenshot({path:path.join(outputDir,'library-after.png'),fullPage:false});
+    checks.push('Library preserves review, approved standards and capabilities as separate views with truthful approval filtering');
+
+    await sidebar.locator('.dt-lang-toggle-compact:visible').click();
+    await areaNav.getByRole('button',{name:'Библиотека',exact:true}).waitFor();
+    assert.equal(await areaNav.getByRole('button',{name:'Библиотека',exact:true}).count(),1);
+    assert.equal(await page.getByRole('navigation',{name:'Библиотека',exact:true}).count(),1);
+    await sidebar.locator('.dt-lang-toggle-compact:visible').click();
+    await areaNav.getByRole('button',{name:'Bibliothek',exact:true}).waitFor();
+    checks.push('The simplified navigation and library views also work in Russian');
 
     const workflow=page.locator('.dt-workstation-main > header');
-    await workflow.getByRole('button',{name:'1. Kundenanfrage'}).click();
-    await page.getByRole('heading',{name:'Kundenanfragen (Foundry Composition Pool)',exact:true}).waitFor();
-    await assertSingleNavigation();
-    await page.getByText('Hoffmann Bau GmbH',{exact:true}).first().click();
-    await page.getByRole('heading',{name:'Anfrage-Analyse & SaaS-Komposition',exact:true}).waitFor();
+    await areaNav.getByRole('button',{name:'Anfragen',exact:true}).click();
+    await openReference();
+    assert.equal(await workflow.getByRole('button',{name:'5. Harden & Build'}).isDisabled(),true);
     await workflow.getByRole('button',{name:'3. UX Preview'}).click();
     await page.getByRole('heading',{name:'Kundenanfrage annehmen',exact:true}).waitFor();
     await assertSingleNavigation();
     await workflow.getByRole('button',{name:'4. Solution Composition'}).click();
     await page.getByRole('heading',{name:'Anfrage-Analyse & SaaS-Komposition',exact:true}).waitFor();
     await assertSingleNavigation();
-    checks.push('Process, preview, analysis and request-list views use one workflow navigation and one intake action');
+    assert.equal(await workflow.getByRole('button').count(),5);
+    checks.push('The selected request has one five-step workflow; unrelated existing projects do not enable Build');
+    await page.getByRole('button',{name:'Approve & Build starten →',exact:true}).click();
+    await page.getByRole('heading',{name:'Aktive Initiative',exact:true}).waitFor();
+    assert.ok((await workflow.innerText()).includes('REQ-2026-017'));
+    assert.equal(await workflow.getByRole('button',{name:'5. Harden & Build'}).isEnabled(),true);
+    checks.push('The existing approval action creates and opens a project for the selected customer');
+    await areaNav.getByRole('button',{name:'Anfragen',exact:true}).click();
+    await page.getByRole('button',{name:'Anfrage öffnen: BauGrund OS GmbH',exact:true}).click();
     await workflow.getByRole('button',{name:'5. Harden & Build'}).click();
     await page.getByRole('heading',{name:'Aktive Initiative',exact:true}).waitFor();
-    await workflow.getByRole('button',{name:'6. Portfolio'}).click();
-    await page.getByRole('heading',{name:'Portfolio / Reopen Trigger Radar',exact:true}).waitFor();
+    assert.ok((await workflow.innerText()).includes('REQ-2024-012'));
     await workflow.getByRole('button',{name:'2. Living Process Map'}).click();
     await page.locator('.dt-process-node').first().waitFor(); await settle();
-    checks.push('All six workflow destinations and request-to-analysis navigation work without demo shortcuts');
+    assert.equal(await page.locator('.react-flow__node[data-id="NODE-BG-01"]').count(),1);
+    checks.push('Build and return to the process map keep the linked customer request instead of the first project');
 
-    await sidebar.getByRole('button',{name:'Homepage öffnen',exact:true}).click();
+    await sidebar.getByRole('button',{name:'Homepage',exact:true}).click();
     assert.equal(await page.locator('.dt-workstation-shell').count(),0);
     await page.getByRole('button',{name:'Kostprobe starten',exact:true}).first().click();
+    await openReference();
     await page.locator('.dt-process-node').first().waitFor(); await settle();
     assert.equal((await sidebar.boundingBox()).width,64);
     checks.push('Homepage and return to the workstation remain available without the removed view-mode toolbar');
@@ -191,6 +234,7 @@ const path = require('node:path');
     for(const size of [{width:1440,height:900},{width:390,height:844}]){
       await page.setViewportSize(size);
       await page.goto(base,{waitUntil:'domcontentloaded'});
+      await openReference();
       await page.locator('.dt-process-node').first().waitFor(); await settle();
       assert.ok(await zoom()>=0.8);
       assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'No page overflow at '+size.width);
@@ -198,6 +242,7 @@ const path = require('node:path');
     }
     await page.setViewportSize({width:1920,height:1080});
     await page.goto(base,{waitUntil:'domcontentloaded'});
+    await openReference();
     await page.locator('.dt-process-node').first().waitFor(); await settle();
     await page.screenshot({path:path.join(outputDir,'apple-design-after.png'),fullPage:false});
 
@@ -215,7 +260,7 @@ const path = require('node:path');
     // Anchored, reversible non-modal disclosure with keyboard return.
     const legendTrigger = page.getByRole('button',{name:'Farblegende',exact:true});
     await legendTrigger.click(); await settle();
-    const legend = page.getByRole('complementary',{name:'Event-Storming-Farblegende'});
+    const legend = page.getByRole('complementary',{name:'Farblegende',exact:true});
     const legendBox=await legend.boundingBox(), triggerBox=await legendTrigger.boundingBox();
     assert.ok(legendBox.y>=triggerBox.y+triggerBox.height);
     assert.ok(legendBox.x>=0 && legendBox.x+legendBox.width<=1920);
@@ -288,7 +333,7 @@ const path = require('node:path');
 
     await cdp.send('Emulation.setEmulatedMedia',{features:[]});
     await page.emulateMedia({reducedMotion:'no-preference',contrast:'no-preference'});
-    await page.reload({waitUntil:'domcontentloaded'}); await page.locator('.dt-process-node').first().waitFor(); await settle();
+    await page.reload({waitUntil:'domcontentloaded'}); await openReference(); await settle();
     await page.getByRole('button',{name:'Prozess aus Kundenwunsch ableiten',exact:true}).click();
     await page.locator('[role="status"]').filter({hasText:/Systeme abgeleitet/}).waitFor();
     checks.push('Local process derivation provides completion feedback without a simulated loading state');
@@ -296,7 +341,11 @@ const path = require('node:path');
     mobileBrowser=await chromium.launch(launchOptions);
     const mobile=await mobileBrowser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:1});
     mobile.on('pageerror',e=>errors.push(e.message));
-    await mobile.goto(base,{waitUntil:'domcontentloaded'}); await mobile.locator('.dt-process-node').first().waitFor();
+    await mobile.goto(base,{waitUntil:'domcontentloaded'});
+    await mobile.getByRole('heading',{name:'Kundenanfragen',exact:true}).waitFor();
+    assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Incoming requests must fit the mobile viewport');
+    await mobile.screenshot({path:path.join(outputDir,'requests-mobile.png'),fullPage:false});
+    await openReference(mobile);
     const touchButtons=await mobile.locator('.dt-canvas-toolbar button,.dt-inspector-status').evaluateAll(es=>es.map(e=>({w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height})));
     assert.ok(touchButtons.every(b=>b.w>=44 && b.h>=44),'Touch controls must have at least a 44px target');
     assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -312,8 +361,8 @@ const path = require('node:path');
     const mobileTargets=await mobileSidebar.locator('button:visible').evaluateAll(es=>es.map(e=>e.getBoundingClientRect().height));
     assert.ok(mobileTargets.every(h=>h>=44));
     await mobile.screenshot({path:path.join(outputDir,'navigation-mobile-open.png'),fullPage:false});
-    await mobileSidebar.getByRole('button',{name:'Settings',exact:true}).tap();
-    await mobile.getByRole('heading',{name:'Settings',exact:true}).waitFor();
+    await mobileSidebar.getByRole('button',{name:'Bibliothek',exact:true}).tap();
+    await mobile.getByRole('heading',{name:'Bibliothek',exact:true}).waitFor();
     assert.equal(await mobileSidebar.getByRole('navigation',{name:'Arbeitsbereiche',exact:true}).isVisible(),false);
     await mobile.getByRole('button',{name:'Arbeitsbereiche öffnen',exact:true}).tap();
     await mobile.keyboard.press('Escape');
@@ -324,7 +373,7 @@ const path = require('node:path');
     checks.push('Touch controls meet 44px sizing and the mobile legend stays within the viewport');
 
     await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});
-    await page.reload({waitUntil:'domcontentloaded'}); await page.locator('.dt-process-node').first().waitFor(); await settle();
+    await page.reload({waitUntil:'domcontentloaded'}); await openReference(); await settle();
     await page.screenshot({path:path.join(outputDir,'apple-design-after.png'),fullPage:false});
     await legendTrigger.click(); await settle();
     await page.locator('.dt-canvas-legend').screenshot({path:path.join(outputDir,'apple-design-legend.png')});

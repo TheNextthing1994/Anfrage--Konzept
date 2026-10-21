@@ -37,7 +37,7 @@ import { BuildWorkspace } from './BuildWorkspace';
 import { PortfolioRadarView } from './PortfolioRadarView';
 import { LiveFoundryIntakeSplitView } from './LiveFoundryIntakeSplitView';
 import { LivingProcessMapView } from './LivingProcessMapView';
-import { WorkstationSidebar } from './WorkstationSidebar';
+import { WorkstationSidebar, type WorkstationNavigationItem } from './WorkstationSidebar';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface WorkstationViewProps {
@@ -65,7 +65,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
   initialOpenIntake = false
 }) => {
   const { t, language } = useLanguage();
-  const [searchQuery, setSearchQuery] = useState('');
   const [showNewInputModal, setShowNewInputModal] = useState(false);
   const [showRequestIntake, setShowRequestIntake] = useState(initialOpenIntake);
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
@@ -117,8 +116,8 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
     return INITIAL_CLIENT_REQUESTS;
   });
 
-  const [selectedRequestId, setSelectedRequestId] = useState<string>('REQ-2026-017');
-  const [requestsViewMode, setRequestsViewMode] = useState<'process-map' | 'split' | 'analysis' | 'list'>('process-map');
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [requestsViewMode, setRequestsViewMode] = useState<'process-map' | 'split' | 'analysis' | 'list'>('list');
 
   // Active Initiatives with local persistence
   const [initiatives, setInitiatives] = useState<ActiveInitiative[]>(() => {
@@ -131,7 +130,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
     return ACTIVE_INITIATIVES;
   });
 
-  const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>('INIT-BAU-01');
+  const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialOpenIntake) {
@@ -158,19 +157,37 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
   const [newWhatItDoes, setNewWhatItDoes] = useState('');
   const [newTrigger, setNewTrigger] = useState('');
 
-  // Settings toggles
-  const [autoTriggerCheck, setAutoTriggerCheck] = useState(true);
-  const [strictZeroLockIn, setStrictZeroLockIn] = useState(true);
-  const [sqliteWalSync, setSqliteWalSync] = useState(true);
-
-  const selectedObject =
-    objects.find((o) => o.id === selectedObjectId) || objects[0];
+  const reviewObjects = objects.filter(o =>
+    ['Raw Input', 'Review pending', 'Needs clarification', 'Approved candidate'].includes(o.currentState)
+  );
+  const standardObjects = objects.filter(o => o.currentState === 'Approved');
+  const isLibrarySection = ['review', 'registry', 'foundry'].includes(activeSection);
+  const libraryObjects = activeSection === 'review' ? reviewObjects
+    : activeSection === 'registry' ? standardObjects
+    : objects.filter(o => FOUNDRY_CAPABILITIES.some(cap => cap.linkedObjectId === o.id));
+  const selectedObject = libraryObjects.find(o => o.id === selectedObjectId) || libraryObjects[0];
 
   const selectedRequest =
     clientRequests.find((r) => r.id === selectedRequestId) || clientRequests[0];
 
   const selectedInitiative =
     initiatives.find((i) => i.id === selectedInitiativeId);
+
+  const workflowRequest = activeSection === 'active'
+    ? clientRequests.find(r => r.id === selectedInitiative?.clientRequestId)
+    : selectedRequest;
+  const matchingInitiative = workflowRequest
+    ? initiatives.find(i => i.clientRequestId === workflowRequest.id)
+    : undefined;
+  const showCustomerWorkflow = Boolean(workflowRequest) && (
+    (activeSection === 'requests' && requestsViewMode !== 'list') ||
+    (activeSection === 'active' && Boolean(selectedInitiative))
+  );
+  const openRequestView = (mode: typeof requestsViewMode) => {
+    if (workflowRequest) setSelectedRequestId(workflowRequest.id);
+    setRequestsViewMode(mode);
+    onSectionChange('requests');
+  };
 
   const triggerFeedback = (msg: string) => {
     setActionFeedback(msg);
@@ -656,36 +673,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
     );
   };
 
-  const filteredObjects = objects.filter((o) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      o.title.toLowerCase().includes(q) ||
-      o.type.toLowerCase().includes(q) ||
-      o.role.toLowerCase().includes(q) ||
-      o.currentState.toLowerCase().includes(q) ||
-      o.whereItFits.toLowerCase().includes(q)
-    );
-  });
-
-  const navItems: {
-    id: WorkstationSection;
-    label: string;
-    count?: number;
-    icon: React.ReactNode;
-  }[] = [
-    {
-      id: 'overview',
-      label: t('navOverview'),
-      count: objects.length,
-      icon: <Layers className="w-4 h-4" />
-    },
-    {
-      id: 'inbox',
-      label: t('navInbox'),
-      count: 5,
-      icon: <Inbox className="w-4 h-4" />
-    },
+  const navItems: WorkstationNavigationItem[] = [
     {
       id: 'requests',
       label: t('navRequests'),
@@ -693,17 +681,15 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
       icon: <MessageSquareQuote className="w-4 h-4 text-emerald-400" />
     },
     {
-      id: 'review',
-      label: t('navReview'),
-      count: objects.filter((o) =>
-        ['Review pending', 'Needs clarification', 'Approved candidate'].includes(o.currentState)
-      ).length,
-      icon: <CheckSquare className="w-4 h-4" />
+      id: 'active',
+      label: t('navActive'),
+      count: initiatives.length,
+      icon: <Activity className="w-4 h-4" />
     },
     {
       id: 'registry',
-      label: t('navRegistry'),
-      count: objects.filter((o) => o.section === 'registry' || o.currentState === 'Approved').length,
+      label: t('navLibrary'),
+      activeSections: ['review', 'registry', 'foundry'],
       icon: <Database className="w-4 h-4" />
     },
     {
@@ -713,23 +699,6 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
         ['Parked', 'Armed', 'Reopened'].includes(o.currentState)
       ).length,
       icon: <Briefcase className="w-4 h-4" />
-    },
-    {
-      id: 'foundry',
-      label: t('navFoundry'),
-      count: FOUNDRY_CAPABILITIES.length,
-      icon: <Cpu className="w-4 h-4" />
-    },
-    {
-      id: 'active',
-      label: t('navActive'),
-      count: initiatives.length,
-      icon: <Activity className="w-4 h-4" />
-    },
-    {
-      id: 'settings',
-      label: t('navSettings'),
-      icon: <Settings className="w-4 h-4" />
     }
   ];
 
@@ -764,6 +733,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
         onSectionChange={(section) => {
           onSectionChange(section);
           setSelectedInitiativeId(null);
+          if (section === 'requests') setRequestsViewMode('list');
         }}
         onBackToLanding={onBackToLanding}
       />
@@ -771,16 +741,16 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
       {/* MAIN WORKSPACE COLUMN */}
       <div className="dt-workstation-main flex-1 flex flex-col min-w-0">
         {/* TOPBAR WITH FOUNDRY OS WORKFLOW STEPS (Translucent Glass Layer) */}
-        <header className="min-h-14 border-b border-slate-700/40 bg-[#0D121C]/65 backdrop-blur-xl px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 shadow-lg shadow-black/20">
-          {/* Workflow Tabs from Screenshot: 1. Kundenanfragen | 2. Living Process Map | 3. Analyse & Komposition | 4. SaaS Manifest | 5. Build & Deployment | 6. Portfolio */}
-          <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-0.5 max-w-full">
+        {showCustomerWorkflow && <header className="min-h-14 border-b border-slate-700/40 bg-[#0D121C]/65 backdrop-blur-xl px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-20 shadow-lg shadow-black/20">
+          <span className="text-xs text-slate-300">
+            {workflowRequest?.company || workflowRequest?.customerName} · {workflowRequest?.id}
+          </span>
+          {/* The workflow always belongs to the customer shown above it. */}
+          <nav aria-label={t('customerWorkflow')} className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto py-0.5 max-w-full">
             {/* Step 1: Kundenanfrage */}
             <button
               type="button"
-              onClick={() => {
-                onSectionChange('requests');
-                setRequestsViewMode('list');
-              }}
+              onClick={() => openRequestView('list')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                 activeSection === 'requests' && requestsViewMode === 'list'
                   ? 'bg-blue-500/20 text-blue-300 border border-blue-500/50 shadow-sm shadow-blue-950'
@@ -794,12 +764,9 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
             {/* Step 2: Living Process Map (Phase 1: VERSTEHEN) */}
             <button
               type="button"
-              onClick={() => {
-                onSectionChange('requests');
-                setRequestsViewMode('process-map');
-              }}
+              onClick={() => openRequestView('process-map')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                (activeSection === 'requests' && requestsViewMode === 'process-map') || activeSection === 'process-map'
+                activeSection === 'requests' && requestsViewMode === 'process-map'
                   ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-sm shadow-purple-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
               }`}
@@ -811,12 +778,9 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
             {/* Step 3: UX Preview (Phase 2: ERLEBEN) */}
             <button
               type="button"
-              onClick={() => {
-                onSectionChange('requests');
-                setRequestsViewMode('split');
-              }}
+              onClick={() => openRequestView('split')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                (activeSection === 'requests' && requestsViewMode === 'split') || activeSection === 'preview'
+                activeSection === 'requests' && requestsViewMode === 'split'
                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
               }`}
@@ -828,12 +792,9 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
             {/* Step 4: Solution Composition (Phase 3: KOMPOSITION) */}
             <button
               type="button"
-              onClick={() => {
-                onSectionChange('requests');
-                setRequestsViewMode('analysis');
-              }}
+              onClick={() => openRequestView('analysis')}
               className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                (activeSection === 'requests' && requestsViewMode === 'analysis') || activeSection === 'composition'
+                activeSection === 'requests' && requestsViewMode === 'analysis'
                   ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm shadow-cyan-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
               }`}
@@ -845,14 +806,15 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
             {/* Step 5: Harden & Build (Phase 4: HÄRTEN) */}
             <button
               type="button"
+              disabled={!matchingInitiative}
+              title={!matchingInitiative ? t('noBuildYet') : matchingInitiative.name}
               onClick={() => {
+                if (!matchingInitiative) return;
+                setSelectedInitiativeId(matchingInitiative.id);
                 onSectionChange('active');
-                if (!selectedInitiativeId && initiatives.length > 0) {
-                  setSelectedInitiativeId(initiatives[0].id);
-                }
               }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                activeSection === 'active' || activeSection === 'harden'
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed ${
+                activeSection === 'active'
                   ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/50 shadow-sm shadow-indigo-950'
                   : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
               }`}
@@ -861,21 +823,8 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
               <span>{t('step5')}</span>
             </button>
 
-            {/* Step 6: Portfolio */}
-            <button
-              type="button"
-              onClick={() => onSectionChange('portfolio')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                activeSection === 'portfolio'
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/50 shadow-sm shadow-purple-950'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent'
-              }`}
-            >
-              <span className="w-4 h-4 rounded-full bg-purple-500/30 text-purple-400 text-[10px] flex items-center justify-center font-bold">6</span>
-              <span>{t('step6')}</span>
-            </button>
-          </div>
-        </header>
+          </nav>
+        </header>}
 
         {/* Action Feedback Toast */}
         {actionFeedback && (
@@ -967,7 +916,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
             <div className="space-y-4">
               <LiveFoundryIntakeSplitView
                 requests={clientRequests}
-                selectedRequestId={selectedRequestId}
+                selectedRequestId={selectedRequest?.id || ''}
                 onSelectRequestId={(id) => setSelectedRequestId(id)}
                 onApproveAndBuild={handleApproveAndBuild}
                 onClarify={handleClarify}
@@ -1006,19 +955,43 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
             />
           ) : (
             /* CASE 4: DEFAULT SPLIT WORKSPACE */
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            <div className="space-y-5">
+              {isLibrarySection && (
+                <div className="space-y-3">
+                  <div>
+                    <h1 className="text-xl font-semibold text-white">{t('navLibrary')}</h1>
+                    <p className="text-xs text-slate-400 mt-1">{t('libraryDescription')}</p>
+                  </div>
+                  <nav aria-label={t('navLibrary')} className="flex flex-wrap gap-2">
+                    {([
+                      { id: 'review', label: t('libraryReview'), count: reviewObjects.length },
+                      { id: 'registry', label: t('libraryStandards'), count: standardObjects.length },
+                      { id: 'foundry', label: t('libraryCapabilities'), count: FOUNDRY_CAPABILITIES.length }
+                    ] as const).map(view => (
+                      <button key={view.id} type="button" aria-current={activeSection === view.id ? 'page' : undefined}
+                        onClick={() => onSectionChange(view.id)}
+                        className={`px-3 py-2 rounded-lg text-xs border transition-colors ${activeSection === view.id
+                          ? 'border-slate-500/60 bg-slate-500/20 text-slate-100'
+                          : 'border-slate-700/40 text-slate-400 hover:text-slate-100'}`}>
+                        {view.label} <span className="ml-1 tabular-nums text-slate-400">{view.count}</span>
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              )}
+            <div className={`grid grid-cols-1 gap-6 ${isLibrarySection && selectedObject ? 'xl:grid-cols-12' : ''}`}>
               {/* Left / Center List (7 cols) */}
-              <div className="xl:col-span-7 space-y-6">
+              <div className={`space-y-6 ${isLibrarySection && selectedObject ? 'xl:col-span-7' : ''}`}>
                 {/* REQUESTS LIST SECTION */}
                 {activeSection === 'requests' && (
                   <section className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
                         <h2 className="text-base font-semibold text-white">
-                          Kundenanfragen (Foundry Composition Pool)
+                          {t('requestsTitle')}
                         </h2>
                         <p className="text-xs text-slate-400">
-                          Reale Kundenprobleme — Wähle eine Anfrage, um die strukturierte Analyse &amp; Kostenkalkulation anzuzeigen
+                          {t('requestsDescription')}
                         </p>
                       </div>
                     </div>
@@ -1027,13 +1000,15 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                       {clientRequests.map((req) => {
                         const isSelected = selectedRequestId === req.id;
                         return (
-                          <div
+                          <button
+                            type="button"
+                            aria-label={`${t('openRequest')}: ${req.company || req.customerName}`}
                             key={req.id}
                             onClick={() => {
                               setSelectedRequestId(req.id);
-                              setRequestsViewMode('analysis');
+                              setRequestsViewMode('process-map');
                             }}
-                            className={`p-5 transition-colors cursor-pointer ${
+                            className={`block w-full text-left p-5 transition-colors cursor-pointer ${
                               isSelected ? 'bg-emerald-500/15' : 'hover:bg-slate-800/35'
                             }`}
                           >
@@ -1050,6 +1025,9 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                                 <div className="text-xs font-mono text-slate-500 mt-0.5 tabular-nums">
                                   ID: {req.id} · Ansprechpartner: {req.customerName}
                                 </div>
+                                <div className="text-xs text-slate-400 mt-1">
+                                  {t('sourceLabel')}: {req.sourceChannel || '—'}
+                                </div>
                               </div>
 
                               <div className="flex items-center gap-2">
@@ -1063,84 +1041,29 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                               </div>
                             </div>
 
-                            <div className="p-3 rounded-lg border border-slate-700/30 bg-[#0B0F17]/60 backdrop-blur-sm text-xs text-slate-300 italic leading-relaxed mb-3">
+                            <div className="line-clamp-3 p-3 rounded-lg border border-slate-700/30 bg-[#0B0F17]/60 backdrop-blur-sm text-xs text-slate-300 italic leading-relaxed mb-3">
                               „{req.rawRequest}“
                             </div>
 
-                            {req.analysis && (
-                              <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-mono pt-3 border-t border-slate-800/80">
-                                <div className="flex items-center gap-4 text-slate-400">
-                                  <span className="text-emerald-400 font-bold tabular-nums">
-                                    {req.analysis.estimatedBuildReusePercent}% Reuse
-                                  </span>
-                                  <span>
-                                    Kosten: ~ {req.analysis.estimatedTotalCostMonthly || 25} € / Mo
-                                  </span>
-                                  <span>
-                                    Preis: {req.analysis.targetCustomerPriceMonthly || (typeof req.targetPrice === 'number' ? req.targetPrice : 150)} € / Mo
-                                  </span>
-                                  <span className="text-emerald-400 font-semibold">
-                                    Marge: {req.analysis.marginPercent || 83}%
-                                  </span>
-                                </div>
-
+                              <div className="flex justify-end text-xs font-mono pt-3 border-t border-slate-800/80">
                                 <span className="text-emerald-400 font-semibold inline-flex items-center gap-1">
-                                  <span>Detail-Analyse öffnen</span>
+                                  <span>{t('openRequest')}</span>
                                   <ArrowRight className="w-3.5 h-3.5" />
                                 </span>
                               </div>
-                            )}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
                   </section>
                 )}
 
-                {/* OVERVIEW OR INBOX */}
-                {(activeSection === 'overview' || activeSection === 'inbox') && (
-                  <section className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-base font-semibold text-white">
-                        Inbox — Neue Inputs
-                      </h2>
-                      <span className="text-xs font-mono text-slate-400">5 Rohe Signale</span>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-800 bg-[#111723] divide-y divide-slate-800">
-                      {objects.slice(0, 5).map((item) => (
-                        <div
-                          key={item.id}
-                          onClick={() => onSelectObject(item.id)}
-                          className={`p-4 flex items-center justify-between gap-4 transition-colors cursor-pointer ${
-                            selectedObjectId === item.id ? 'bg-emerald-500/10' : 'hover:bg-slate-800/40'
-                          }`}
-                        >
-                          <div className="min-w-0">
-                            <div className="text-sm font-semibold text-white truncate">
-                              {item.category}: {item.title}
-                            </div>
-                            <div className="text-xs text-slate-400 mt-0.5 truncate">
-                              {item.subtitle}
-                            </div>
-                          </div>
-                          <span
-                            className={`text-xs font-mono ${getStateColorText(item.currentState)}`}
-                          >
-                            {item.currentState}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
                 {/* ACTIVE INITIATIVES SECTION */}
-                {(activeSection === 'overview' || activeSection === 'active') && (
+                {activeSection === 'active' && (
                   <section className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h2 className="text-base font-semibold text-white">
-                        Active — Laufende Initiativen &amp; Builds
+                        {t('projectsTitle')}
                       </h2>
                       <span className="text-xs font-mono text-emerald-400 tabular-nums">
                         {initiatives.length} Aktive Systeme
@@ -1149,10 +1072,12 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {initiatives.map((init) => (
-                        <div
+                        <button
+                          type="button"
+                          aria-label={`${t('navActive')}: ${init.name}`}
                           key={init.id}
                           onClick={() => setSelectedInitiativeId(init.id)}
-                          className="rounded-xl border border-slate-800 bg-[#111723] p-5 hover:border-emerald-500/50 transition-colors cursor-pointer flex flex-col justify-between"
+                          className="text-left rounded-xl border border-slate-800 bg-[#111723] p-5 hover:border-emerald-500/50 transition-colors cursor-pointer flex flex-col justify-between"
                         >
                           <div>
                             <div className="flex items-center justify-between text-xs font-mono text-slate-400 mb-2">
@@ -1177,7 +1102,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                               <span>Build Workspace öffnen →</span>
                             </div>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </section>
@@ -1186,15 +1111,9 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                 {/* REVIEW */}
                 {activeSection === 'review' && (
                   <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-white">Review Queue</h2>
+                    <h2 className="text-base font-semibold text-white">{t('libraryReview')}</h2>
                     <div className="space-y-3">
-                      {objects
-                        .filter((o) =>
-                          ['Review pending', 'Needs clarification', 'Approved candidate'].includes(
-                            o.currentState
-                          )
-                        )
-                        .map((rev) => (
+                      {reviewObjects.map((rev) => (
                           <div
                             key={rev.id}
                             onClick={() => onSelectObject(rev.id)}
@@ -1215,12 +1134,10 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                 {activeSection === 'registry' && (
                   <section className="space-y-4">
                     <h2 className="text-base font-semibold text-white">
-                      Registry — Bestätigte System-Standards
+                      {t('libraryStandards')}
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      {objects
-                        .filter((o) => o.section === 'registry' || o.currentState === 'Approved')
-                        .map((reg) => (
+                      {standardObjects.map((reg) => (
                           <div
                             key={reg.id}
                             onClick={() => onSelectObject(reg.id)}
@@ -1240,7 +1157,7 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                 {/* FOUNDRY */}
                 {activeSection === 'foundry' && (
                   <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-white">Foundry Capabilities</h2>
+                    <h2 className="text-base font-semibold text-white">{t('libraryCapabilities')}</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {FOUNDRY_CAPABILITIES.map((cap) => (
                         <div
@@ -1257,23 +1174,15 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                   </section>
                 )}
 
-                {/* SETTINGS */}
-                {activeSection === 'settings' && (
-                  <section className="space-y-4">
-                    <h2 className="text-base font-semibold text-white">Settings</h2>
-                    <div className="p-5 rounded-xl border border-slate-800 bg-[#111723] text-xs font-mono text-slate-300">
-                      Foundry Engine v1.4 · Lokaler SQLite Store · DSGVO Autarkie aktiv.
-                    </div>
-                  </section>
-                )}
+                {isLibrarySection && libraryObjects.length === 0 && <p className="text-sm text-slate-400">{t('noItems')}</p>}
               </div>
 
               {/* Right Column: Object Inspector (5 cols) */}
-              <div className="xl:col-span-5 bg-[#0D121C] p-6 rounded-xl border border-slate-800">
+              {isLibrarySection && selectedObject && <div className="xl:col-span-5 bg-[#0D121C] p-6 rounded-xl border border-slate-800">
                 <div className="space-y-5">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                     <span className="text-xs font-mono text-emerald-400 font-semibold">
-                      OBJECT INSPECTOR · {selectedObject.id}
+                      {t('librarySource')} · {selectedObject.id}
                     </span>
                     <span className="text-xs font-mono text-slate-400">
                       {selectedObject.currentState}
@@ -1332,7 +1241,8 @@ export const WorkstationView: React.FC<WorkstationViewProps> = ({
                     </div>
                   </div>
                 </div>
-              </div>
+              </div>}
+            </div>
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@ import { useLanguage, LanguageToggle } from '../i18n/LanguageContext';
 
 export interface WorkstationNavigationItem {
   id: WorkstationSection;
+  activeSections?: WorkstationSection[];
   label: string;
   count?: number;
   icon: React.ReactNode;
@@ -86,7 +87,7 @@ export function WorkstationSidebar({
               type="button"
               className="dt-sidebar-link"
               aria-label={item.label}
-              aria-current={activeSection === item.id ? 'page' : undefined}
+              aria-current={(item.activeSections || [item.id]).includes(activeSection) ? 'page' : undefined}
               title={item.count === undefined ? item.label : `${item.label} · ${item.count}`}
               onClick={() => {
                 onSectionChange(item.id);

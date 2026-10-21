@@ -32,6 +32,7 @@ import {
   TriggerMatchSignal,
   INITIAL_SIGNALS
 } from '../data/workstationData';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface PortfolioRadarViewProps {
   objects: StandardizedObject[];
@@ -46,7 +47,7 @@ export const PortfolioRadarView: React.FC<PortfolioRadarViewProps> = ({
   onSelectObject,
   onTriggerReopen
 }) => {
-  const [activeTab, setActiveTab] = useState<'objekte' | 'radar' | 'aktivitaeten' | 'analytics'>('objekte');
+  const { t } = useLanguage();
   const [statusFilter, setStatusFilter] = useState<string>('Alle Status');
   const [relevanceFilter, setRelevanceFilter] = useState<string>('Alle Trigger-Relevanz');
   const [search, setSearch] = useState<string>('');
@@ -66,7 +67,7 @@ export const PortfolioRadarView: React.FC<PortfolioRadarViewProps> = ({
     return true;
   });
 
-  const selectedObject = objects.find((o) => o.id === selectedObjectId) || portfolioObjects[0];
+  const selectedObject = portfolioObjects.find((o) => o.id === selectedObjectId) || portfolioObjects[0];
 
   return (
     <div className="space-y-6 animate-fadeIn pb-12">
@@ -74,10 +75,10 @@ export const PortfolioRadarView: React.FC<PortfolioRadarViewProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
         <div>
           <h1 className="font-display text-2xl font-bold text-white tracking-tight">
-            Portfolio / Reopen Trigger Radar
+            {t('opportunitiesTitle')}
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
-            Geparkte und reaktivierbare Möglichkeiten — das System beobachtet kontinuierlich Signale und reaktiviert zur richtigen Zeit.
+            {t('opportunitiesDescription')}
           </p>
         </div>
 
@@ -108,29 +109,6 @@ export const PortfolioRadarView: React.FC<PortfolioRadarViewProps> = ({
             <span className="text-[10px] text-cyan-400">Reopened</span>
           </div>
         </div>
-      </div>
-
-      {/* Tabs Bar: Objekte | Trigger Radar | Aktivitäten | Analytics */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-2 text-xs font-mono">
-        {[
-          { id: 'objekte', label: 'Objekte' },
-          { id: 'radar', label: 'Trigger Radar' },
-          { id: 'aktivitaeten', label: 'Aktivitäten' },
-          { id: 'analytics', label: 'Analytics' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-              activeTab === tab.id
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
       </div>
 
       {/* Filter Row: Status, Trigger-Relevanz, Suche */}
